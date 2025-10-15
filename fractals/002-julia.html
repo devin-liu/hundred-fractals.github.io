@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>002 - Julia Set | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .parameter-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .slider-group label {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 120px;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #aaa;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .zoom-info {
+            color: #ccc;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .description {
+            max-width: 600px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>002 - Julia Set</h1>
+            <div class="info">October 15, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="juliaCanvas" width="800" height="600"></canvas>
+            <div id="loading" class="loading" style="display: none;">Computing fractal...</div>
+        </div>
+
+        <div class="controls">
+            <div class="parameter-controls">
+                <div class="slider-group">
+                    <label>Real (c)</label>
+                    <input type="range" id="realSlider" min="-2" max="2" step="0.01" value="-0.7">
+                    <div class="value-display" id="realValue">-0.70</div>
+                </div>
+                <div class="slider-group">
+                    <label>Imaginary (c)</label>
+                    <input type="range" id="imagSlider" min="-2" max="2" step="0.01" value="0.27015">
+                    <div class="value-display" id="imagValue">0.27</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="preset-buttons">
+                <button class="preset-btn" data-real="-0.7" data-imag="0.27015">Dragon</button>
+                <button class="preset-btn" data-real="-0.835" data-imag="-0.2321">Lightning</button>
+                <button class="preset-btn" data-real="-0.8" data-imag="0.156">Spiral</button>
+                <button class="preset-btn" data-real="0.285" data-imag="0.01">Flower</button>
+                <button class="preset-btn" data-real="-0.4" data-imag="0.6">Swirl</button>
+                <button class="preset-btn" data-real="0.3" data-imag="0.5">Burst</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="resetBtn">Reset View</button>
+            <button id="increaseIterations">More Detail</button>
+            <button id="decreaseIterations">Less Detail</button>
+            <div class="zoom-info">
+                <div>Zoom: <span id="zoomLevel">1.0x</span></div>
+                <div>Iterations: <span id="iterationCount">100</span></div>
+            </div>
+        </div>
+
+        <div class="description">
+            <p>
+                Julia sets are closely related to the Mandelbrot set. For each complex number c, 
+                we get a different Julia set by iterating f(z) = z² + c starting from different 
+                points z₀ in the complex plane. Try different values of c using the sliders above, 
+                or click the preset buttons to explore beautiful variations. Click to zoom in!
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class JuliaRenderer {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.width = canvas.width;
+                this.height = canvas.height;
+                
+                this.centerX = 0;
+                this.centerY = 0;
+                this.zoom = 1;
+                this.maxIterations = 100;
+                
+                this.cReal = -0.7;
+                this.cImag = 0.27015;
+                
+                this.imageData = this.ctx.createImageData(this.width, this.height);
+                
+                this.setupEventListeners();
+                this.render();
+            }
+
+            setupEventListeners() {
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const complexX = this.pixelToComplex(x, 'x');
+                    const complexY = this.pixelToComplex(y, 'y');
+                    
+                    this.centerX = complexX;
+                    this.centerY = complexY;
+                    this.zoom *= 2;
+                    
+                    this.updateZoomDisplay();
+                    this.render();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.centerX = 0;
+                    this.centerY = 0;
+                    this.zoom = 1;
+                    this.updateZoomDisplay();
+                    this.render();
+                });
+
+                document.getElementById('increaseIterations').addEventListener('click', () => {
+                    this.maxIterations = Math.min(1000, this.maxIterations + 50);
+                    this.updateIterationDisplay();
+                    this.render();
+                });
+
+                document.getElementById('decreaseIterations').addEventListener('click', () => {
+                    this.maxIterations = Math.max(50, this.maxIterations - 50);
+                    this.updateIterationDisplay();
+                    this.render();
+                });
+
+                const realSlider = document.getElementById('realSlider');
+                const imagSlider = document.getElementById('imagSlider');
+                const realValue = document.getElementById('realValue');
+                const imagValue = document.getElementById('imagValue');
+
+                realSlider.addEventListener('input', (e) => {
+                    this.cReal = parseFloat(e.target.value);
+                    realValue.textContent = this.cReal.toFixed(2);
+                    this.render();
+                });
+
+                imagSlider.addEventListener('input', (e) => {
+                    this.cImag = parseFloat(e.target.value);
+                    imagValue.textContent = this.cImag.toFixed(2);
+                    this.render();
+                });
+
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const real = parseFloat(btn.dataset.real);
+                        const imag = parseFloat(btn.dataset.imag);
+                        
+                        this.cReal = real;
+                        this.cImag = imag;
+                        
+                        realSlider.value = real;
+                        imagSlider.value = imag;
+                        realValue.textContent = real.toFixed(2);
+                        imagValue.textContent = imag.toFixed(2);
+                        
+                        this.render();
+                    });
+                });
+            }
+
+            pixelToComplex(pixel, axis) {
+                const scale = 3 / this.zoom;
+                if (axis === 'x') {
+                    return this.centerX + (pixel - this.width / 2) * scale / this.width;
+                } else {
+                    return this.centerY + (pixel - this.height / 2) * scale / this.height;
+                }
+            }
+
+            julia(zx, zy) {
+                let x = zx;
+                let y = zy;
+                let iteration = 0;
+
+                while (x * x + y * y <= 4 && iteration < this.maxIterations) {
+                    const xtemp = x * x - y * y + this.cReal;
+                    y = 2 * x * y + this.cImag;
+                    x = xtemp;
+                    iteration++;
+                }
+
+                return iteration;
+            }
+
+            getColor(iterations) {
+                if (iterations === this.maxIterations) {
+                    return [0, 0, 0, 255];
+                }
+
+                const t = iterations / this.maxIterations;
+                
+                const r = Math.floor(255 * (0.5 + 0.5 * Math.cos(3.0 + t * 6.28 + 0.0)));
+                const g = Math.floor(255 * (0.5 + 0.5 * Math.cos(3.0 + t * 6.28 + 2.09)));
+                const b = Math.floor(255 * (0.5 + 0.5 * Math.cos(3.0 + t * 6.28 + 4.19)));
+
+                return [r, g, b, 255];
+            }
+
+            async render() {
+                this.showLoading(true);
+                
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        const data = this.imageData.data;
+                        
+                        for (let py = 0; py < this.height; py++) {
+                            for (let px = 0; px < this.width; px++) {
+                                const zx = this.pixelToComplex(px, 'x');
+                                const zy = this.pixelToComplex(py, 'y');
+                                
+                                const iterations = this.julia(zx, zy);
+                                const color = this.getColor(iterations);
+                                
+                                const index = (py * this.width + px) * 4;
+                                data[index] = color[0];
+                                data[index + 1] = color[1];
+                                data[index + 2] = color[2];
+                                data[index + 3] = color[3];
+                            }
+                        }
+                        
+                        this.ctx.putImageData(this.imageData, 0, 0);
+                        this.showLoading(false);
+                        resolve();
+                    }, 10);
+                });
+            }
+
+            showLoading(show) {
+                document.getElementById('loading').style.display = show ? 'block' : 'none';
+            }
+
+            updateZoomDisplay() {
+                document.getElementById('zoomLevel').textContent = this.zoom.toFixed(1) + 'x';
+            }
+
+            updateIterationDisplay() {
+                document.getElementById('iterationCount').textContent = this.maxIterations;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('juliaCanvas');
+            new JuliaRenderer(canvas);
+        });
+    </script>
+</body>
+</html>
