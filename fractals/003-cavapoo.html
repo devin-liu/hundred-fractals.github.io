@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>003 - Cavapoo | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        .description {
+            max-width: 600px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>003 - Cavapoo</h1>
+            <div class="info">October 16, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="cavapooCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="regenerateBtn">Regenerate</button>
+        </div>
+
+        <div class="description">
+            <p>
+                A branching fractal pattern inspired by the warm, textured fur of a Cavapoo.
+                The color palette is drawn from golden, cream, white, and warm brown tones,
+                creating an organic, furry aesthetic through recursive branching patterns.
+                Circular elements evoke the dog's warm brown eyes.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // Color palette extracted from the cavapoo
+        const colors = {
+            cream: '#F3D9B1',     // Light fur color
+            golden: '#D4A17D',    // Reddish-golden tone
+            white: '#FFFFFF',     // White patch
+            black: '#000000',     // Collar color
+            brown: '#8B4513'      // Warm brown eye color
+        };
+
+        // Moved fractal drawing logic into a separate function to avoid potential closure issues
+        const drawFractalArt = (canvas) => {
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 800;
+
+            // Background with a soft warm tone inspired by the dog's coloration
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(212, 161, 125, 0.1)');  // Golden tone
+            gradient.addColorStop(1, 'rgba(243, 217, 177, 0.1)');  // Cream tone
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Fractal generation function
+            const drawFractal = (x, y, size, angle, depth) => {
+                if (depth === 0) return;
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+
+                // Create branching patterns inspired by fur texture
+                const branches = [
+                    { angle: 0, lengthRatio: 0.7 },
+                    { angle: Math.PI / 3, lengthRatio: 0.5 },
+                    { angle: -Math.PI / 3, lengthRatio: 0.5 }
+                ];
+
+                branches.forEach(branch => {
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+
+                    // Vary color based on depth, now including brown
+                    const colorShades = [
+                        colors.cream,
+                        colors.golden,
+                        colors.white,
+                        colors.brown
+                    ];
+                    ctx.strokeStyle = colorShades[depth % colorShades.length];
+
+                    // Slightly varying line width for organic feel
+                    ctx.lineWidth = size * 0.1;
+
+                    const newX = size * branch.lengthRatio;
+                    const newY = 0;
+
+                    ctx.lineTo(newX, newY);
+                    ctx.stroke();
+
+                    // Recursive fractal branching
+                    if (depth > 0) {
+                        drawFractal(
+                            newX,
+                            newY,
+                            size * 0.7,
+                            branch.angle,
+                            depth - 1
+                        );
+                    }
+                });
+
+                ctx.restore();
+            };
+
+            // Draw multiple fractal starting points
+            const startPoints = [
+                { x: canvas.width/2, y: canvas.height/2, angle: 0, depth: 6 },
+                { x: canvas.width/3, y: canvas.height/3, angle: Math.PI/4, depth: 5 },
+                { x: 2*canvas.width/3, y: 2*canvas.height/3, angle: -Math.PI/4, depth: 5 },
+                // Add an additional starting point with brown color emphasis
+                { x: canvas.width/2, y: 2*canvas.height/3, angle: Math.PI/2, depth: 4 }
+            ];
+
+            startPoints.forEach(point => {
+                drawFractal(point.x, point.y, 100, point.angle, point.depth);
+            });
+
+            // Add circular elements reminiscent of the dog's warm brown eyes
+            ctx.beginPath();
+            ctx.arc(canvas.width/4, canvas.height/4, 50, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.2)';  // Soft brown
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(3*canvas.width/4, 3*canvas.height/4, 70, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.1)';  // Softer brown
+            ctx.fill();
+        };
+
+        // Initialize canvas on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('cavapooCanvas');
+            drawFractalArt(canvas);
+
+            // Add regenerate button functionality
+            document.getElementById('regenerateBtn').addEventListener('click', () => {
+                drawFractalArt(canvas);
+            });
+        });
+    </script>
+</body>
+</html>
