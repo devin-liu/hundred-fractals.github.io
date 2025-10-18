@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>004 - Cognitive Resonance Mandelbrot | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .description {
+            max-width: 700px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>004 - Cognitive Resonance Mandelbrot</h1>
+            <div class="info">October 17, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="resonanceCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="regenerateBtn">Regenerate Pattern</button>
+            <button id="animateBtn">Animate Growth</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Variation Amount</label>
+                    <input type="range" id="variationSlider" min="0" max="100" value="35" step="1">
+                    <div class="value-display" id="variationValue">35%</div>
+                </div>
+                <div class="slider-group">
+                    <label>Branch Complexity</label>
+                    <input type="range" id="complexitySlider" min="3" max="8" value="6" step="1">
+                    <div class="value-display" id="complexityValue">6</div>
+                </div>
+                <div class="slider-group">
+                    <label>Color Shift</label>
+                    <input type="range" id="colorShiftSlider" min="0" max="360" value="180" step="1">
+                    <div class="value-display" id="colorShiftValue">180°</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>The Cognitive Resonance Mandelbrot</h2>
+            <p>
+                A visual metaphor for how our brain finds pleasure in recognizing patterns with subtle variations.
+                Watch as branches grow from a single point, where each new branch looks similar to its parent but
+                never exactly the same.
+            </p>
+            <p>
+                As the branches spread out, they become slightly twisted, change in thickness, and shift in color –
+                creating a complex, interconnected system that reflects how our minds delight in discovering
+                differences within familiarity.
+            </p>
+            <p>
+                This fractal captures the essence of artistic pleasure: our brain's remarkable ability to find
+                satisfaction in recognizing structures that are "the same, except..." – creating a visual
+                representation of the cognitive joy we experience when we detect nuanced, meaningful patterns.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class CognitiveResonanceFractal {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 900;
+                this.canvas.height = 900;
+
+                // Parameters for "intelligent randomness"
+                this.variationAmount = 0.35;
+                this.maxDepth = 6;
+                this.colorShift = 180;
+                this.seed = Math.random() * 1000;
+                this.isAnimating = false;
+                this.animationFrame = 0;
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('regenerateBtn').addEventListener('click', () => {
+                    this.seed = Math.random() * 1000;
+                    this.draw();
+                });
+
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    if (!this.isAnimating) {
+                        this.animate();
+                    }
+                });
+
+                document.getElementById('variationSlider').addEventListener('input', (e) => {
+                    this.variationAmount = parseFloat(e.target.value) / 100;
+                    document.getElementById('variationValue').textContent = e.target.value + '%';
+                    this.draw();
+                });
+
+                document.getElementById('complexitySlider').addEventListener('input', (e) => {
+                    this.maxDepth = parseInt(e.target.value);
+                    document.getElementById('complexityValue').textContent = e.target.value;
+                    this.draw();
+                });
+
+                document.getElementById('colorShiftSlider').addEventListener('input', (e) => {
+                    this.colorShift = parseFloat(e.target.value);
+                    document.getElementById('colorShiftValue').textContent = e.target.value + '°';
+                    this.draw();
+                });
+            }
+
+            // Pseudo-random number generator for consistent variations
+            seededRandom(seed) {
+                const x = Math.sin(seed) * 10000;
+                return x - Math.floor(x);
+            }
+
+            // Get a variation value that's "similar but different"
+            getVariation(base, seed, amount) {
+                const random = this.seededRandom(seed);
+                const variation = (random - 0.5) * 2 * amount;
+                return base + variation;
+            }
+
+            draw() {
+                // Clear canvas with gradient background
+                const bgGradient = this.ctx.createRadialGradient(
+                    this.canvas.width / 2, this.canvas.height / 2, 0,
+                    this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2
+                );
+                bgGradient.addColorStop(0, '#0a0a0a');
+                bgGradient.addColorStop(1, '#050505');
+                this.ctx.fillStyle = bgGradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Start from center
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Draw multiple root branches in a circle pattern
+                const rootBranches = 8;
+                for (let i = 0; i < rootBranches; i++) {
+                    const angle = (Math.PI * 2 * i) / rootBranches;
+                    this.drawBranch(
+                        centerX,
+                        centerY,
+                        80,  // Initial length
+                        angle,
+                        0,   // Depth
+                        this.seed + i * 100
+                    );
+                }
+            }
+
+            drawBranch(x, y, length, angle, depth, seed) {
+                if (depth >= this.maxDepth || length < 2) return;
+
+                this.ctx.save();
+
+                // Calculate end point with subtle variation
+                const actualAngle = this.getVariation(angle, seed * 1.1, this.variationAmount * 0.3);
+                const actualLength = this.getVariation(length, seed * 1.2, this.variationAmount * 0.2);
+
+                const endX = x + Math.cos(actualAngle) * actualLength;
+                const endY = y + Math.sin(actualAngle) * actualLength;
+
+                // Color based on depth and variation
+                const hue = (depth * (360 / this.maxDepth) + this.colorShift +
+                            this.seededRandom(seed * 1.3) * this.variationAmount * 60) % 360;
+                const saturation = 60 + this.seededRandom(seed * 1.4) * 20;
+                const lightness = 45 + depth * 5 + this.seededRandom(seed * 1.5) * 10;
+
+                // Line width varies with depth and random variation
+                const baseWidth = (this.maxDepth - depth) * 2;
+                const lineWidth = this.getVariation(baseWidth, seed * 1.6, this.variationAmount * 0.4);
+
+                // Draw the branch
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
+
+                // Add slight curve for organic feel
+                const controlX = (x + endX) / 2 + this.seededRandom(seed * 1.7) * 20 - 10;
+                const controlY = (y + endY) / 2 + this.seededRandom(seed * 1.8) * 20 - 10;
+                this.ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+
+                this.ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.7)`;
+                this.ctx.lineWidth = Math.max(0.5, lineWidth);
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+
+                // Add a subtle glow effect
+                this.ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness + 20}%, 0.3)`;
+                this.ctx.lineWidth = Math.max(1, lineWidth * 1.5);
+                this.ctx.stroke();
+
+                // Determine number of child branches (with variation)
+                const numBranches = Math.floor(this.getVariation(3, seed * 1.9, 0.3)) + 2;
+
+                // Create child branches with "similar but different" logic
+                for (let i = 0; i < numBranches; i++) {
+                    const branchSeed = seed * (i + 1) * 7.3 + depth * 11.7;
+
+                    // Angle variation creates the "intelligent randomness"
+                    const angleSpread = Math.PI / 2;
+                    const branchAngle = actualAngle +
+                        (i - numBranches / 2) * (angleSpread / numBranches) +
+                        this.seededRandom(branchSeed * 2.1) * this.variationAmount -
+                        this.variationAmount / 2;
+
+                    // Length reduces with depth but with variation
+                    const lengthRatio = this.getVariation(0.7, branchSeed * 2.2, this.variationAmount * 0.15);
+                    const newLength = actualLength * lengthRatio;
+
+                    this.drawBranch(
+                        endX,
+                        endY,
+                        newLength,
+                        branchAngle,
+                        depth + 1,
+                        branchSeed
+                    );
+                }
+
+                this.ctx.restore();
+            }
+
+            async animate() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                const originalDepth = this.maxDepth;
+
+                for (let d = 1; d <= originalDepth; d++) {
+                    this.maxDepth = d;
+                    this.draw();
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                }
+
+                this.maxDepth = originalDepth;
+                this.isAnimating = false;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('resonanceCanvas');
+            new CognitiveResonanceFractal(canvas);
+        });
+    </script>
+</body>
+</html>
