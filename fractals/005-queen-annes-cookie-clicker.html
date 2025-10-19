@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>005 - Queen Anne's Cookie Clicker | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 1.5rem;
+        }
+
+        .game-layout {
+            display: flex;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+        }
+
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+
+        .stats-panel {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-width: 280px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .stats-panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .big-stat {
+            text-align: center;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .big-stat-label {
+            color: #aaa;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .big-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            font-family: monospace;
+            margin-top: 0.5rem;
+        }
+
+        .upgrades {
+            margin-top: 1.5rem;
+        }
+
+        .upgrades h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .upgrade-btn {
+            width: 100%;
+            background: rgba(102, 126, 234, 0.2);
+            color: white;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+
+        .upgrade-btn:hover:not(:disabled) {
+            background: rgba(102, 126, 234, 0.4);
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .upgrade-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .upgrade-title {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .upgrade-desc {
+            display: block;
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-bottom: 0.25rem;
+        }
+
+        .upgrade-cost {
+            display: block;
+            font-size: 0.8rem;
+            color: #667eea;
+            font-family: monospace;
+        }
+
+        .controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 1rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .click-indicator {
+            position: absolute;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+            text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-burst 0.8s ease-out forwards;
+        }
+
+        @keyframes particle-burst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>005 - Queen Anne's Cookie Clicker</h1>
+            <div class="info">October 18, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="game-layout">
+            <div class="canvas-container">
+                <canvas id="flowerCanvas" width="700" height="700"></canvas>
+            </div>
+
+            <div class="stats-panel">
+                <h2>Garden Stats</h2>
+
+                <div class="big-stat">
+                    <div class="big-stat-label">Total Blooms</div>
+                    <div class="big-stat-value" id="totalBlooms">0</div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-label">Blooms per click</span>
+                    <span class="stat-value" id="bloomsPerClick">1</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-label">Auto-blooms/sec</span>
+                    <span class="stat-value" id="bloomsPerSecond">0</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-label">Flower depth</span>
+                    <span class="stat-value" id="flowerDepth">3</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-label">Branches</span>
+                    <span class="stat-value" id="branchCount">5</span>
+                </div>
+
+                <div class="upgrades">
+                    <h3>Upgrades</h3>
+
+                    <button class="upgrade-btn" id="upgrade-depth" data-cost="50">
+                        <span class="upgrade-title">Deeper Roots</span>
+                        <span class="upgrade-desc">Add fractal depth level</span>
+                        <span class="upgrade-cost">Cost: 50 blooms</span>
+                    </button>
+
+                    <button class="upgrade-btn" id="upgrade-branches" data-cost="100">
+                        <span class="upgrade-title">More Branches</span>
+                        <span class="upgrade-desc">Increase branch count</span>
+                        <span class="upgrade-cost">Cost: 100 blooms</span>
+                    </button>
+
+                    <button class="upgrade-btn" id="upgrade-click" data-cost="75">
+                        <span class="upgrade-title">Green Thumb</span>
+                        <span class="upgrade-desc">+1 bloom per click</span>
+                        <span class="upgrade-cost">Cost: 75 blooms</span>
+                    </button>
+
+                    <button class="upgrade-btn" id="upgrade-auto" data-cost="150">
+                        <span class="upgrade-title">Bee Pollinator</span>
+                        <span class="upgrade-desc">+1 bloom/sec</span>
+                        <span class="upgrade-cost">Cost: 150 blooms</span>
+                    </button>
+
+                    <button class="upgrade-btn" id="upgrade-color" data-cost="200">
+                        <span class="upgrade-title">Rainbow Garden</span>
+                        <span class="upgrade-desc">Unlock color spectrum</span>
+                        <span class="upgrade-cost">Cost: 200 blooms</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="resetBtn">Reset Garden</button>
+        </div>
+
+        <div class="description">
+            <h2>Queen Anne's Cookie Clicker</h2>
+            <p>
+                Inspired by the delicate umbel structure of Queen Anne's Lace, this fractal grows with each click.
+                Watch as your garden blooms into increasingly complex patterns. The fractal mimics the flower's
+                characteristic clustered florets radiating from a central point, creating intricate self-similar
+                patterns at every scale.
+            </p>
+            <p>
+                Click the flower to earn blooms, unlock upgrades, and watch your fractal garden flourish with
+                deeper recursion, more branches, and vibrant colors. Each upgrade transforms the mathematical
+                beauty into something new while maintaining the elegant structure of Queen Anne's Lace.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class QueenAnnesClicker {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+
+                // Game state
+                this.totalBlooms = 0;
+                this.bloomsPerClick = 1;
+                this.bloomsPerSecond = 0;
+                this.depth = 3;
+                this.branches = 5;
+                this.hasRainbow = false;
+
+                // Upgrade costs
+                this.upgradeCosts = {
+                    depth: 50,
+                    branches: 100,
+                    click: 75,
+                    auto: 150,
+                    color: 200
+                };
+
+                this.setupEventListeners();
+                this.drawFlower();
+                this.startAutoBloom();
+                this.updateUI();
+            }
+
+            setupEventListeners() {
+                this.canvas.addEventListener('click', (e) => {
+                    this.handleClick(e);
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    if (confirm('Reset your entire garden? This cannot be undone!')) {
+                        this.reset();
+                    }
+                });
+
+                // Upgrade buttons
+                document.getElementById('upgrade-depth').addEventListener('click', () => {
+                    this.purchaseUpgrade('depth', () => {
+                        this.depth++;
+                        this.upgradeCosts.depth = Math.floor(this.upgradeCosts.depth * 2);
+                    });
+                });
+
+                document.getElementById('upgrade-branches').addEventListener('click', () => {
+                    this.purchaseUpgrade('branches', () => {
+                        this.branches++;
+                        this.upgradeCosts.branches = Math.floor(this.upgradeCosts.branches * 2.5);
+                    });
+                });
+
+                document.getElementById('upgrade-click').addEventListener('click', () => {
+                    this.purchaseUpgrade('click', () => {
+                        this.bloomsPerClick++;
+                        this.upgradeCosts.click = Math.floor(this.upgradeCosts.click * 1.5);
+                    });
+                });
+
+                document.getElementById('upgrade-auto').addEventListener('click', () => {
+                    this.purchaseUpgrade('auto', () => {
+                        this.bloomsPerSecond++;
+                        this.upgradeCosts.auto = Math.floor(this.upgradeCosts.auto * 2);
+                    });
+                });
+
+                document.getElementById('upgrade-color').addEventListener('click', () => {
+                    this.purchaseUpgrade('color', () => {
+                        this.hasRainbow = true;
+                    });
+                });
+            }
+
+            purchaseUpgrade(type, upgradeFunction) {
+                const cost = this.upgradeCosts[type];
+                if (this.totalBlooms >= cost) {
+                    this.totalBlooms -= cost;
+                    upgradeFunction();
+                    this.drawFlower();
+                    this.updateUI();
+                }
+            }
+
+            handleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Add blooms
+                this.totalBlooms += this.bloomsPerClick;
+
+                // Visual feedback
+                this.createClickIndicator(x, y);
+                this.createParticles(x, y);
+                this.drawFlower();
+                this.updateUI();
+            }
+
+            createClickIndicator(x, y) {
+                const indicator = document.createElement('div');
+                indicator.className = 'click-indicator';
+                indicator.textContent = `+${this.bloomsPerClick}`;
+                indicator.style.left = x + 'px';
+                indicator.style.top = y + 'px';
+                this.canvas.parentElement.appendChild(indicator);
+
+                setTimeout(() => indicator.remove(), 1000);
+            }
+
+            createParticles(x, y) {
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    const angle = (Math.PI * 2 * i) / 8;
+                    const distance = 50 + Math.random() * 30;
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                    particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                    this.canvas.parentElement.appendChild(particle);
+
+                    setTimeout(() => particle.remove(), 800);
+                }
+            }
+
+            drawFlower() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Draw Queen Anne's Lace structure - umbel pattern
+                for (let i = 0; i < this.branches; i++) {
+                    const angle = (Math.PI * 2 * i) / this.branches;
+                    this.drawUmbel(centerX, centerY, 120, angle, 0, i);
+                }
+
+                // Draw central dark floret (characteristic of Queen Anne's Lace)
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+                this.ctx.fillStyle = '#4a0e4e';
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#764ba2';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+
+            drawUmbel(x, y, length, angle, currentDepth, branchIndex) {
+                if (currentDepth >= this.depth || length < 3) return;
+
+                this.ctx.save();
+
+                // Calculate end point
+                const endX = x + Math.cos(angle) * length;
+                const endY = y + Math.sin(angle) * length;
+
+                // Color based on depth and rainbow upgrade
+                let strokeColor;
+                if (this.hasRainbow) {
+                    const hue = (branchIndex * 360 / this.branches + currentDepth * 30) % 360;
+                    strokeColor = `hsl(${hue}, 80%, ${70 - currentDepth * 8}%)`;
+                } else {
+                    const lightness = 90 - currentDepth * 15;
+                    strokeColor = `hsl(0, 0%, ${lightness}%)`;
+                }
+
+                // Draw stem
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = (this.depth - currentDepth) * 0.8;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+
+                // Add glow effect
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.globalAlpha = 0.3;
+                this.ctx.lineWidth = (this.depth - currentDepth) * 1.5;
+                this.ctx.stroke();
+                this.ctx.globalAlpha = 1;
+
+                // Draw floret at end
+                if (currentDepth === this.depth - 1 || length < 10) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(endX, endY, 2 + Math.random() * 2, 0, Math.PI * 2);
+                    this.ctx.fillStyle = strokeColor;
+                    this.ctx.fill();
+                }
+
+                // Create secondary umbels (recursive branching)
+                const numSecondary = 3 + Math.floor(currentDepth * 0.5);
+                for (let i = 0; i < numSecondary; i++) {
+                    const spreadAngle = Math.PI / 3;
+                    const branchAngle = angle + (i - numSecondary / 2) * (spreadAngle / numSecondary);
+                    const newLength = length * (0.5 + Math.random() * 0.2);
+
+                    this.drawUmbel(
+                        endX,
+                        endY,
+                        newLength,
+                        branchAngle,
+                        currentDepth + 1,
+                        branchIndex
+                    );
+                }
+
+                this.ctx.restore();
+            }
+
+            startAutoBloom() {
+                setInterval(() => {
+                    if (this.bloomsPerSecond > 0) {
+                        this.totalBlooms += this.bloomsPerSecond;
+                        this.drawFlower();
+                        this.updateUI();
+                    }
+                }, 1000);
+            }
+
+            updateUI() {
+                document.getElementById('totalBlooms').textContent =
+                    Math.floor(this.totalBlooms).toLocaleString();
+                document.getElementById('bloomsPerClick').textContent = this.bloomsPerClick;
+                document.getElementById('bloomsPerSecond').textContent = this.bloomsPerSecond;
+                document.getElementById('flowerDepth').textContent = this.depth;
+                document.getElementById('branchCount').textContent = this.branches;
+
+                // Update upgrade buttons
+                this.updateUpgradeButton('upgrade-depth', 'depth', 'Deeper Roots');
+                this.updateUpgradeButton('upgrade-branches', 'branches', 'More Branches');
+                this.updateUpgradeButton('upgrade-click', 'click', 'Green Thumb');
+                this.updateUpgradeButton('upgrade-auto', 'auto', 'Bee Pollinator');
+
+                const colorBtn = document.getElementById('upgrade-color');
+                if (this.hasRainbow) {
+                    colorBtn.disabled = true;
+                    colorBtn.querySelector('.upgrade-cost').textContent = 'Purchased!';
+                } else {
+                    colorBtn.disabled = this.totalBlooms < this.upgradeCosts.color;
+                    colorBtn.querySelector('.upgrade-cost').textContent =
+                        `Cost: ${this.upgradeCosts.color} blooms`;
+                }
+            }
+
+            updateUpgradeButton(id, type, title) {
+                const btn = document.getElementById(id);
+                const cost = this.upgradeCosts[type];
+                btn.disabled = this.totalBlooms < cost;
+                btn.querySelector('.upgrade-cost').textContent = `Cost: ${cost} blooms`;
+            }
+
+            reset() {
+                this.totalBlooms = 0;
+                this.bloomsPerClick = 1;
+                this.bloomsPerSecond = 0;
+                this.depth = 3;
+                this.branches = 5;
+                this.hasRainbow = false;
+                this.upgradeCosts = {
+                    depth: 50,
+                    branches: 100,
+                    click: 75,
+                    auto: 150,
+                    color: 200
+                };
+                this.drawFlower();
+                this.updateUI();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('flowerCanvas');
+            new QueenAnnesClicker(canvas);
+        });
+    </script>
+</body>
+</html>
