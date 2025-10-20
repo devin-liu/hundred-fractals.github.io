@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>006 - Venturi Diffuser | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #050505;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button.active {
+            background: #e63946;
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            width: 180px;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #667eea;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .speed-indicator {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #e63946;
+            font-family: monospace;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .legend {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 15px;
+            border-radius: 3px;
+        }
+
+        .legend-label {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>006 - Venturi Diffuser</h1>
+            <div class="info">October 19, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="diffuserCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Flow Animation</button>
+            <button id="resetBtn">Reset View</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Car Speed (kph)</label>
+                    <div class="value-display speed-indicator" id="speedValue">300</div>
+                    <input type="range" id="speedSlider" min="50" max="350" value="300" step="10">
+                </div>
+                <div class="slider-group">
+                    <label>Tunnel Count</label>
+                    <input type="range" id="tunnelSlider" min="3" max="9" value="5" step="1">
+                    <div class="value-display" id="tunnelValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Flow Density</label>
+                    <input type="range" id="densitySlider" min="50" max="300" value="150" step="10">
+                    <div class="value-display" id="densityValue">150</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Depth</label>
+                    <input type="range" id="depthSlider" min="2" max="6" value="4" step="1">
+                    <div class="value-display" id="depthValue">4</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0066ff;"></div>
+                <span class="legend-label">Low Pressure (High Speed)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #00ff88;"></div>
+                <span class="legend-label">Medium Pressure</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffff00;"></div>
+                <span class="legend-label">Ambient Pressure</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff6600;"></div>
+                <span class="legend-label">High Pressure (Slow Speed)</span>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Venturi Diffuser: Ground Effect Aerodynamics</h2>
+            <p>
+                This fractal visualization represents the Venturi effect in Formula 1 car diffusers. As air
+                accelerates through the narrowing tunnels under the car, it creates low pressure zones that
+                literally suck the car to the ground - generating massive downforce without the drag penalty
+                of wings.
+            </p>
+            <p>
+                The fractal patterns show how airflow accelerates (blue = high speed/low pressure) through
+                constricted channels, then expands in the diffuser section. Each tunnel creates recursive
+                vortex structures that interact and interfere, creating the complex pressure patterns that
+                define modern F1 ground effect aerodynamics.
+            </p>
+            <p>
+                Adjust the car speed to see how flow velocity affects pressure distribution. Higher speeds
+                create more intense low-pressure zones (deeper blue), generating greater downforce. The
+                fractal depth represents the turbulent cascade from large-scale flow structures down to
+                microscopic eddies.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class VenturiDiffuser {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1000;
+                this.canvas.height = 700;
+
+                // Flow parameters
+                this.speed = 300; // kph
+                this.tunnelCount = 5;
+                this.flowDensity = 150;
+                this.fractalDepth = 4;
+                this.isAnimating = false;
+                this.animationFrame = 0;
+                this.particles = [];
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('tunnelSlider').addEventListener('input', (e) => {
+                    this.tunnelCount = parseInt(e.target.value);
+                    document.getElementById('tunnelValue').textContent = this.tunnelCount;
+                    this.initParticles();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('densitySlider').addEventListener('input', (e) => {
+                    this.flowDensity = parseInt(e.target.value);
+                    document.getElementById('densityValue').textContent = this.flowDensity;
+                    this.initParticles();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('depthSlider').addEventListener('input', (e) => {
+                    this.fractalDepth = parseInt(e.target.value);
+                    document.getElementById('depthValue').textContent = this.fractalDepth;
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Flow Animation';
+                    btn.classList.add('active');
+                    this.initParticles();
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Flow Animation';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            initParticles() {
+                this.particles = [];
+                for (let i = 0; i < this.flowDensity; i++) {
+                    this.particles.push({
+                        x: Math.random() * 200, // Start from left side
+                        y: Math.random() * this.canvas.height,
+                        tunnelIndex: Math.floor(Math.random() * this.tunnelCount),
+                        life: Math.random() * 100
+                    });
+                }
+            }
+
+            // Calculate Venturi pressure based on position and speed
+            getPressure(x, width) {
+                // Bernoulli's principle: P1 + 0.5*ρ*v1² = P2 + 0.5*ρ*v2²
+                // As area decreases (throat), velocity increases, pressure decreases
+
+                const normalizedX = x / width;
+
+                // Venturi shape: inlet -> throat (narrowest) -> diffuser (expansion)
+                let areaNormalized;
+                if (normalizedX < 0.3) {
+                    // Inlet section - gradual narrowing
+                    areaNormalized = 1 - (0.4 * normalizedX / 0.3);
+                } else if (normalizedX < 0.5) {
+                    // Throat section - narrowest point
+                    areaNormalized = 0.6 - (0.2 * (normalizedX - 0.3) / 0.2);
+                } else {
+                    // Diffuser section - expansion
+                    areaNormalized = 0.4 + (0.6 * (normalizedX - 0.5) / 0.5);
+                }
+
+                // Velocity inversely proportional to area
+                const velocityRatio = 1 / areaNormalized;
+
+                // Pressure decreases with velocity squared (simplified)
+                const speedFactor = this.speed / 300;
+                const pressure = 1 - (velocityRatio - 1) * 0.7 * speedFactor;
+
+                return Math.max(0, Math.min(1, pressure));
+            }
+
+            // Get color based on pressure (Bernoulli principle)
+            getPressureColor(pressure) {
+                // Low pressure (high speed) = blue
+                // High pressure (low speed) = red/orange
+
+                if (pressure < 0.3) {
+                    // Very low pressure - deep blue to cyan
+                    const t = pressure / 0.3;
+                    return `rgb(0, ${Math.floor(t * 102)}, 255)`;
+                } else if (pressure < 0.5) {
+                    // Low to medium - cyan to green
+                    const t = (pressure - 0.3) / 0.2;
+                    return `rgb(0, ${Math.floor(102 + t * 153)}, ${Math.floor(255 - t * 167)})`;
+                } else if (pressure < 0.7) {
+                    // Medium - green to yellow
+                    const t = (pressure - 0.5) / 0.2;
+                    return `rgb(${Math.floor(t * 255)}, 255, ${Math.floor(88 - t * 88)})`;
+                } else {
+                    // High pressure - yellow to orange/red
+                    const t = (pressure - 0.7) / 0.3;
+                    return `rgb(255, ${Math.floor(255 - t * 153)}, 0)`;
+                }
+            }
+
+            draw() {
+                // Clear with black background
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const tunnelSpacing = this.canvas.height / (this.tunnelCount + 1);
+
+                // Draw each diffuser tunnel with fractal pressure patterns
+                for (let i = 0; i < this.tunnelCount; i++) {
+                    const centerY = tunnelSpacing * (i + 1);
+                    this.drawTunnel(centerY, i);
+                }
+
+                // Draw pressure field as fractal patterns
+                this.drawPressureField();
+            }
+
+            drawTunnel(centerY, index) {
+                const width = this.canvas.width * 0.8;
+                const startX = this.canvas.width * 0.1;
+
+                // Draw tunnel outline with Venturi shape
+                this.ctx.save();
+                this.ctx.strokeStyle = 'rgba(102, 126, 234, 0.3)';
+                this.ctx.lineWidth = 2;
+
+                // Top and bottom walls of tunnel
+                this.ctx.beginPath();
+                for (let x = 0; x <= width; x += 5) {
+                    const normalizedX = x / width;
+                    let height;
+
+                    if (normalizedX < 0.3) {
+                        height = 40 - (10 * normalizedX / 0.3);
+                    } else if (normalizedX < 0.5) {
+                        height = 30 - (10 * (normalizedX - 0.3) / 0.2);
+                    } else {
+                        height = 20 + (30 * (normalizedX - 0.5) / 0.5);
+                    }
+
+                    if (x === 0) {
+                        this.ctx.moveTo(startX + x, centerY - height);
+                    } else {
+                        this.ctx.lineTo(startX + x, centerY - height);
+                    }
+                }
+                this.ctx.stroke();
+
+                this.ctx.beginPath();
+                for (let x = 0; x <= width; x += 5) {
+                    const normalizedX = x / width;
+                    let height;
+
+                    if (normalizedX < 0.3) {
+                        height = 40 - (10 * normalizedX / 0.3);
+                    } else if (normalizedX < 0.5) {
+                        height = 30 - (10 * (normalizedX - 0.3) / 0.2);
+                    } else {
+                        height = 20 + (30 * (normalizedX - 0.5) / 0.5);
+                    }
+
+                    if (x === 0) {
+                        this.ctx.moveTo(startX + x, centerY + height);
+                    } else {
+                        this.ctx.lineTo(startX + x, centerY + height);
+                    }
+                }
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawPressureField() {
+                const resolution = 8;
+                const width = this.canvas.width * 0.8;
+                const startX = this.canvas.width * 0.1;
+
+                for (let y = 0; y < this.canvas.height; y += resolution) {
+                    for (let x = 0; x < width; x += resolution) {
+                        const pressure = this.getPressure(x, width);
+                        const color = this.getPressureColor(pressure);
+
+                        // Add fractal turbulence
+                        const turbulence = this.calculateTurbulence(
+                            startX + x,
+                            y,
+                            this.fractalDepth
+                        );
+
+                        this.ctx.fillStyle = color;
+                        this.ctx.globalAlpha = 0.15 + turbulence * 0.15;
+                        this.ctx.fillRect(startX + x, y, resolution, resolution);
+                    }
+                }
+
+                this.ctx.globalAlpha = 1;
+            }
+
+            calculateTurbulence(x, y, depth) {
+                let value = 0;
+                let amplitude = 1;
+                let frequency = 0.005;
+
+                for (let i = 0; i < depth; i++) {
+                    value += amplitude * Math.abs(
+                        Math.sin(x * frequency + this.animationFrame * 0.01) *
+                        Math.cos(y * frequency + this.animationFrame * 0.01)
+                    );
+                    amplitude *= 0.5;
+                    frequency *= 2;
+                }
+
+                return value;
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.animationFrame++;
+
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw tunnels
+                const tunnelSpacing = this.canvas.height / (this.tunnelCount + 1);
+                for (let i = 0; i < this.tunnelCount; i++) {
+                    const centerY = tunnelSpacing * (i + 1);
+                    this.drawTunnel(centerY, i);
+                }
+
+                // Draw pressure field
+                this.drawPressureField();
+
+                // Update and draw particles
+                const width = this.canvas.width * 0.8;
+                const startX = this.canvas.width * 0.1;
+
+                this.particles.forEach(particle => {
+                    // Get current pressure/velocity
+                    const pressure = this.getPressure(particle.x, width);
+                    const velocity = (1 - pressure + 0.3) * (this.speed / 100);
+
+                    // Move particle
+                    particle.x += velocity;
+                    particle.life++;
+
+                    // Add turbulent motion
+                    const turbulence = this.calculateTurbulence(particle.x, particle.y, 2);
+                    particle.y += (Math.random() - 0.5) * turbulence * 3;
+
+                    // Reset if off screen
+                    if (particle.x > width || particle.life > 200) {
+                        particle.x = 0;
+                        particle.y = Math.random() * this.canvas.height;
+                        particle.life = 0;
+                    }
+
+                    // Draw particle
+                    const color = this.getPressureColor(pressure);
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = 0.6;
+                    this.ctx.beginPath();
+                    this.ctx.arc(startX + particle.x, particle.y, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Draw trail
+                    this.ctx.globalAlpha = 0.2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(startX + particle.x, particle.y);
+                    this.ctx.lineTo(startX + particle.x - velocity * 2, particle.y);
+                    this.ctx.strokeStyle = color;
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.stroke();
+                });
+
+                this.ctx.globalAlpha = 1;
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.speed = 300;
+                this.tunnelCount = 5;
+                this.flowDensity = 150;
+                this.fractalDepth = 4;
+
+                document.getElementById('speedSlider').value = 300;
+                document.getElementById('speedValue').textContent = '300';
+                document.getElementById('tunnelSlider').value = 5;
+                document.getElementById('tunnelValue').textContent = '5';
+                document.getElementById('densitySlider').value = 150;
+                document.getElementById('densityValue').textContent = '150';
+                document.getElementById('depthSlider').value = 4;
+                document.getElementById('depthValue').textContent = '4';
+
+                if (this.isAnimating) {
+                    this.initParticles();
+                } else {
+                    this.draw();
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('diffuserCanvas');
+            new VenturiDiffuser(canvas);
+        });
+    </script>
+</body>
+</html>
