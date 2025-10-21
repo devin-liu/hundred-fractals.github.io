@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>007 - James Bond | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #c8a872;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #d4af37;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(200, 168, 114, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        button {
+            background: linear-gradient(135deg, #c8a872 0%, #8b7355 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #d4af37 0%, #c8a872 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(200, 168, 114, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ff0000 0%, #990000 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(200, 168, 114, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(200, 168, 114, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #c8a872;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #c8a872;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #d4af37;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(200, 168, 114, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(200, 168, 114, 0.1);
+            position: relative;
+            z-index: 5;
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #c8a872;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .crosshair {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .crosshair-line-h {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 0, 0, 0.3);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .crosshair-line-v {
+            position: absolute;
+            height: 100%;
+            width: 2px;
+            background: rgba(255, 0, 0, 0.3);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>007 - James Bond Gun Barrel</h1>
+            <div class="info">October 20, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="bondCanvas"></canvas>
+            <div class="crosshair">
+                <div class="crosshair-line-h"></div>
+                <div class="crosshair-line-v"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Sequence</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Spiral Depth</label>
+                    <input type="range" id="depthSlider" min="3" max="12" value="7" step="1">
+                    <div class="value-display" id="depthValue">7</div>
+                </div>
+                <div class="slider-group">
+                    <label>Spiral Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Groove Count</label>
+                    <input type="range" id="grooveSlider" min="6" max="24" value="12" step="1">
+                    <div class="value-display" id="grooveValue">12</div>
+                </div>
+                <div class="slider-group">
+                    <label>Rifling Twist</label>
+                    <input type="range" id="twistSlider" min="5" max="30" value="15" step="1">
+                    <div class="value-display" id="twistValue">15</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>007: Gun Barrel Spiral</h2>
+            <p>
+                Inspired by the iconic James Bond opening sequence, this fractal recreates the mesmerizing
+                spiral pattern of a gun barrel's rifling grooves. The expanding spiral creates a hypnotic
+                tunnel effect that draws the viewer deeper into the fractal structure.
+            </p>
+            <p>
+                The rifling grooves in a firearm barrel twist in a precise helical pattern, imparting spin
+                to the bullet for stability. This visualization transforms those engineering grooves into
+                an infinite fractal tunnel, where each spiral contains smaller spirals in a recursive
+                pattern that echoes the original Bond titles designed by Maurice Binder.
+            </p>
+            <p>
+                Adjust the spiral depth to control recursion levels, speed to change the expansion rate,
+                groove count for the number of rifling lands, and rifling twist to control the spiral
+                tightness. Watch as the fractal spirals expand outward like the view down a gun barrel.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class BondSpiral {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 800;
+                this.canvas.height = 800;
+
+                // Spiral parameters
+                this.depth = 7;
+                this.speed = 5;
+                this.grooveCount = 12;
+                this.riflingTwist = 15;
+                this.isAnimating = false;
+                this.animationFrame = 0;
+                this.expansionProgress = 0;
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('depthSlider').addEventListener('input', (e) => {
+                    this.depth = parseInt(e.target.value);
+                    document.getElementById('depthValue').textContent = this.depth;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('grooveSlider').addEventListener('input', (e) => {
+                    this.grooveCount = parseInt(e.target.value);
+                    document.getElementById('grooveValue').textContent = this.grooveCount;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('twistSlider').addEventListener('input', (e) => {
+                    this.riflingTwist = parseInt(e.target.value);
+                    document.getElementById('twistValue').textContent = this.riflingTwist;
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Sequence';
+                    btn.classList.add('active');
+                    this.expansionProgress = 0;
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Sequence';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            draw() {
+                // Clear with black background
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Draw the gun barrel spiral
+                this.drawBarrelSpiral(centerX, centerY, 0);
+            }
+
+            drawBarrelSpiral(centerX, centerY, animOffset) {
+                this.ctx.save();
+
+                // Draw multiple depth levels
+                for (let d = this.depth; d >= 0; d--) {
+                    const scale = Math.pow(0.7, this.depth - d);
+                    const baseRadius = 400 * scale;
+
+                    // Draw grooves for this depth level
+                    for (let g = 0; g < this.grooveCount; g++) {
+                        const grooveAngle = (Math.PI * 2 * g) / this.grooveCount;
+                        this.drawSpiralGroove(
+                            centerX,
+                            centerY,
+                            baseRadius,
+                            grooveAngle,
+                            d,
+                            animOffset
+                        );
+                    }
+                }
+
+                // Draw central circle (barrel opening)
+                const centerRadius = 50 - animOffset * 2;
+                if (centerRadius > 0) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX, centerY, centerRadius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#c8a872';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.stroke();
+
+                    // Inner shadow effect
+                    const gradient = this.ctx.createRadialGradient(
+                        centerX, centerY, 0,
+                        centerX, centerY, centerRadius
+                    );
+                    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+                    gradient.addColorStop(0.7, 'rgba(0,0,0,0.8)');
+                    gradient.addColorStop(1, 'rgba(200,168,114,0.2)');
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fill();
+                }
+
+                this.ctx.restore();
+            }
+
+            drawSpiralGroove(centerX, centerY, maxRadius, startAngle, depth, animOffset) {
+                this.ctx.save();
+
+                const points = [];
+                const steps = 100;
+                const twistFactor = this.riflingTwist / 100;
+
+                // Generate spiral path
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const radius = maxRadius * t + animOffset;
+
+                    // Spiral angle calculation with twist
+                    const spiralAngle = startAngle + t * Math.PI * 2 * twistFactor;
+
+                    const x = centerX + Math.cos(spiralAngle) * radius;
+                    const y = centerY + Math.sin(spiralAngle) * radius;
+
+                    points.push({ x, y, t });
+                }
+
+                // Draw the spiral groove with gradient
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+
+                    // Color based on depth and position
+                    const brightness = 100 - depth * 8 + p1.t * 50;
+                    const alpha = 0.3 + p1.t * 0.4;
+
+                    // Alternate between light and dark grooves
+                    const hue = 40; // Gold hue
+                    const saturation = 30 + p1.t * 20;
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${brightness}%, ${alpha})`;
+                    this.ctx.lineWidth = 8 - depth * 0.5 - p1.t * 4;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+
+                    // Add glow effect
+                    this.ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${brightness + 20}%, ${alpha * 0.3})`;
+                    this.ctx.lineWidth = 12 - depth * 0.5 - p1.t * 5;
+                    this.ctx.stroke();
+                }
+
+                // Add fractal detail lines between grooves
+                if (depth < this.depth - 1) {
+                    const detailAngle = startAngle + Math.PI / this.grooveCount;
+                    const detailPoints = [];
+
+                    for (let i = 0; i <= steps / 2; i++) {
+                        const t = i / (steps / 2);
+                        const radius = maxRadius * t * 0.8 + animOffset;
+                        const spiralAngle = detailAngle + t * Math.PI * 2 * twistFactor * 0.8;
+
+                        const x = centerX + Math.cos(spiralAngle) * radius;
+                        const y = centerY + Math.sin(spiralAngle) * radius;
+
+                        detailPoints.push({ x, y, t });
+                    }
+
+                    for (let i = 0; i < detailPoints.length - 1; i++) {
+                        const p1 = detailPoints[i];
+                        const p2 = detailPoints[i + 1];
+
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.strokeStyle = `rgba(200, 168, 114, ${0.1 + p1.t * 0.2})`;
+                        this.ctx.lineWidth = 2 - p1.t * 1.5;
+                        this.ctx.stroke();
+                    }
+                }
+
+                this.ctx.restore();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.animationFrame++;
+                this.expansionProgress += this.speed * 0.5;
+
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Expansion effect
+                const expansion = Math.sin(this.expansionProgress * 0.02) * 30;
+
+                // Draw the animated barrel spiral
+                this.drawBarrelSpiral(centerX, centerY, expansion);
+
+                // Add pulsing vignette effect
+                const gradient = this.ctx.createRadialGradient(
+                    centerX, centerY, 100,
+                    centerX, centerY, this.canvas.width / 2
+                );
+                const pulseAlpha = 0.3 + Math.sin(this.animationFrame * 0.05) * 0.1;
+                gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                gradient.addColorStop(1, `rgba(0,0,0,${pulseAlpha})`);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.depth = 7;
+                this.speed = 5;
+                this.grooveCount = 12;
+                this.riflingTwist = 15;
+                this.expansionProgress = 0;
+
+                document.getElementById('depthSlider').value = 7;
+                document.getElementById('depthValue').textContent = '7';
+                document.getElementById('speedSlider').value = 5;
+                document.getElementById('speedValue').textContent = '5';
+                document.getElementById('grooveSlider').value = 12;
+                document.getElementById('grooveValue').textContent = '12';
+                document.getElementById('twistSlider').value = 15;
+                document.getElementById('twistValue').textContent = '15';
+
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('bondCanvas');
+            new BondSpiral(canvas);
+        });
+    </script>
+</body>
+</html>
