@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>008 - Aurora Borealis | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #4ecca3;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #00d9ff;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(78, 204, 163, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4ecca3 0%, #00d9ff 100%);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 204, 163, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(78, 204, 163, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(78, 204, 163, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #4ecca3;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #4ecca3;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #00d9ff;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(78, 204, 163, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(78, 204, 163, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #4ecca3;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>008 - Aurora Borealis</h1>
+            <div class="info">October 21, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="auroraCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Aurora</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Wave Intensity</label>
+                    <input type="range" id="intensitySlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="intensityValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Wave Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Layers</label>
+                    <input type="range" id="layersSlider" min="3" max="8" value="5" step="1">
+                    <div class="value-display" id="layersValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Color Shift</label>
+                    <input type="range" id="colorSlider" min="0" max="360" value="140" step="10">
+                    <div class="value-display" id="colorValue">140</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Aurora Borealis: Northern Lights</h2>
+            <p>
+                The Aurora Borealis is a natural phenomenon caused by charged particles from the sun
+                colliding with Earth's atmosphere. This fractal visualization captures the ethereal,
+                wave-like patterns of the northern lights dancing across the Arctic sky above a
+                mountain range.
+            </p>
+            <p>
+                Using recursive wave functions and Perlin noise algorithms, this fractal generates
+                organic, flowing curtains of light that mimic the real aurora. Each layer represents
+                different altitudes where oxygen and nitrogen atoms emit photons at various wavelengths,
+                creating the characteristic green, blue, and purple hues.
+            </p>
+            <p>
+                Adjust the wave intensity to control the amplitude of the aurora's movement, speed to
+                change how quickly the lights dance, fractal layers to add depth and complexity, and
+                color shift to explore different atmospheric compositions and altitudes.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class AuroraBorealis {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Aurora parameters
+                this.intensity = 5;
+                this.speed = 5;
+                this.layers = 5;
+                this.colorShift = 140;
+                this.isAnimating = false;
+                this.time = 0;
+
+                // Mountain data
+                this.mountains = [];
+                this.generateMountains();
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('intensitySlider').addEventListener('input', (e) => {
+                    this.intensity = parseInt(e.target.value);
+                    document.getElementById('intensityValue').textContent = this.intensity;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('layersSlider').addEventListener('input', (e) => {
+                    this.layers = parseInt(e.target.value);
+                    document.getElementById('layersValue').textContent = this.layers;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('colorSlider').addEventListener('input', (e) => {
+                    this.colorShift = parseInt(e.target.value);
+                    document.getElementById('colorValue').textContent = this.colorShift;
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            generateMountains() {
+                // Generate 3 layers of mountains with different heights (lower mountains)
+                this.mountains = [
+                    this.createMountainLayer(0.85, 5), // Far mountains
+                    this.createMountainLayer(0.75, 7), // Middle mountains
+                    this.createMountainLayer(0.65, 9)  // Near mountains
+                ];
+            }
+
+            createMountainLayer(baseHeight, peaks) {
+                const points = [];
+                const width = this.canvas.width;
+                const baseY = this.canvas.height * baseHeight;
+
+                points.push({ x: 0, y: this.canvas.height });
+
+                for (let i = 0; i <= peaks; i++) {
+                    const x = (width / peaks) * i;
+                    const variance = 30 + Math.random() * 60;
+                    const y = baseY - variance;
+                    points.push({ x, y });
+                }
+
+                points.push({ x: width, y: this.canvas.height });
+
+                return points;
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Aurora';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Aurora';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            // Perlin-like noise function
+            noise(x, y) {
+                const X = Math.floor(x) & 255;
+                const Y = Math.floor(y) & 255;
+
+                x -= Math.floor(x);
+                y -= Math.floor(y);
+
+                const u = this.fade(x);
+                const v = this.fade(y);
+
+                const n00 = this.grad(X, Y, x, y);
+                const n01 = this.grad(X, Y + 1, x, y - 1);
+                const n10 = this.grad(X + 1, Y, x - 1, y);
+                const n11 = this.grad(X + 1, Y + 1, x - 1, y - 1);
+
+                const nx0 = this.lerp(n00, n10, u);
+                const nx1 = this.lerp(n01, n11, u);
+
+                return this.lerp(nx0, nx1, v);
+            }
+
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            lerp(a, b, t) {
+                return a + t * (b - a);
+            }
+
+            grad(x, y, dx, dy) {
+                const hash = (x * 374761393 + y * 668265263) & 0xFFFFFFFF;
+                const h = hash & 3;
+                return (h === 0 ? dx + dy : h === 1 ? -dx + dy : h === 2 ? dx - dy : -dx - dy);
+            }
+
+            // Fractal noise with multiple octaves
+            fractalNoise(x, y, octaves) {
+                let value = 0;
+                let amplitude = 1;
+                let frequency = 1;
+                let maxValue = 0;
+
+                for (let i = 0; i < octaves; i++) {
+                    value += this.noise(x * frequency, y * frequency) * amplitude;
+                    maxValue += amplitude;
+                    amplitude *= 0.5;
+                    frequency *= 2;
+                }
+
+                return value / maxValue;
+            }
+
+            drawSky() {
+                // Gradient sky
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height * 0.5);
+                gradient.addColorStop(0, '#001a33');
+                gradient.addColorStop(0.5, '#002244');
+                gradient.addColorStop(1, '#003355');
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Add stars
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                for (let i = 0; i < 200; i++) {
+                    const x = Math.random() * this.canvas.width;
+                    const y = Math.random() * this.canvas.height * 0.6;
+                    const size = Math.random() * 1.5;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+
+            drawAurora() {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+
+                // Draw multiple layers of aurora (spread across more sky)
+                for (let layer = 0; layer < this.layers; layer++) {
+                    const baseY = height * (0.15 + layer * 0.08);
+                    const wavePoints = [];
+
+                    // Generate wave points using fractal noise
+                    for (let x = 0; x <= width; x += 5) {
+                        const noiseValue = this.fractalNoise(
+                            x * 0.003,
+                            layer * 0.5 + this.time * 0.001,
+                            4
+                        );
+
+                        const waveHeight = noiseValue * this.intensity * 40;
+                        const y = baseY + waveHeight;
+
+                        wavePoints.push({ x, y });
+                    }
+
+                    // Draw aurora curtain
+                    this.ctx.save();
+
+                    for (let i = 0; i < wavePoints.length - 1; i++) {
+                        const p1 = wavePoints[i];
+                        const p2 = wavePoints[i + 1];
+
+                        // Create vertical gradient for aurora curtain (longer curtains)
+                        const curtainLength = 350;
+                        const gradient = this.ctx.createLinearGradient(p1.x, p1.y, p1.x, p1.y + curtainLength);
+
+                        // Color based on layer and color shift
+                        const hue = (this.colorShift + layer * 30) % 360;
+                        const alpha = 0.2 + (Math.sin(this.time * 0.002 + layer) * 0.08);
+
+                        gradient.addColorStop(0, `hsla(${hue}, 80%, 60%, ${alpha})`);
+                        gradient.addColorStop(0.5, `hsla(${hue + 20}, 70%, 50%, ${alpha * 0.6})`);
+                        gradient.addColorStop(1, `hsla(${hue + 40}, 60%, 40%, 0)`);
+
+                        this.ctx.fillStyle = gradient;
+
+                        // Draw curtain segment
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.lineTo(p2.x, p2.y + curtainLength);
+                        this.ctx.lineTo(p1.x, p1.y + curtainLength);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+
+                        // Add glow effect
+                        this.ctx.strokeStyle = `hsla(${hue}, 90%, 70%, ${alpha * 0.8})`;
+                        this.ctx.lineWidth = 2;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.stroke();
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+
+            drawMountains() {
+                // Draw mountains from back to front
+                const colors = [
+                    'rgba(20, 30, 50, 1)',
+                    'rgba(30, 40, 60, 1)',
+                    'rgba(40, 50, 70, 1)'
+                ];
+
+                for (let i = 0; i < this.mountains.length; i++) {
+                    const points = this.mountains[i];
+
+                    this.ctx.save();
+                    this.ctx.fillStyle = colors[i];
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(points[0].x, points[0].y);
+
+                    for (let j = 1; j < points.length; j++) {
+                        this.ctx.lineTo(points[j].x, points[j].y);
+                    }
+
+                    this.ctx.closePath();
+                    this.ctx.fill();
+
+                    // Add snow caps
+                    if (i === this.mountains.length - 1) {
+                        this.ctx.fillStyle = 'rgba(200, 220, 255, 0.3)';
+                        for (let j = 1; j < points.length - 1; j++) {
+                            if (points[j].y < this.canvas.height * 0.4) {
+                                this.ctx.beginPath();
+                                const prev = points[j - 1];
+                                const curr = points[j];
+                                const next = points[j + 1];
+
+                                this.ctx.moveTo(curr.x, curr.y);
+                                this.ctx.lineTo(prev.x + (curr.x - prev.x) * 0.7, prev.y);
+                                this.ctx.lineTo(curr.x, curr.y + 30);
+                                this.ctx.lineTo(curr.x + (next.x - curr.x) * 0.3, next.y);
+                                this.ctx.closePath();
+                                this.ctx.fill();
+                            }
+                        }
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+
+            draw() {
+                this.drawSky();
+                this.drawAurora();
+                this.drawMountains();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time += this.speed;
+
+                this.drawSky();
+                this.drawAurora();
+                this.drawMountains();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.intensity = 5;
+                this.speed = 5;
+                this.layers = 5;
+                this.colorShift = 140;
+                this.time = 0;
+
+                document.getElementById('intensitySlider').value = 5;
+                document.getElementById('intensityValue').textContent = '5';
+                document.getElementById('speedSlider').value = 5;
+                document.getElementById('speedValue').textContent = '5';
+                document.getElementById('layersSlider').value = 5;
+                document.getElementById('layersValue').textContent = '5';
+                document.getElementById('colorSlider').value = 140;
+                document.getElementById('colorValue').textContent = '140';
+
+                this.generateMountains();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('auroraCanvas');
+            new AuroraBorealis(canvas);
+        });
+    </script>
+</body>
+</html>
