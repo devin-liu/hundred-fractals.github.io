@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>009 - Karl the Fog | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #9ca3af;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #d1d5db;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(156, 163, 175, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(156, 163, 175, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(156, 163, 175, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(156, 163, 175, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #9ca3af;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #d1d5db;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(156, 163, 175, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(156, 163, 175, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .time-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fbbf24;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>009 - Karl the Fog</h1>
+            <div class="info">October 22, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="karlCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Karl</button>
+            <button id="resetBtn">Reset</button>
+            <div class="time-display" id="timeDisplay">12:00 PM</div>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Fog Density</label>
+                    <input type="range" id="densitySlider" min="1" max="10" value="6" step="1">
+                    <div class="value-display" id="densityValue">6</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fog Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Time Speed</label>
+                    <input type="range" id="timeSpeedSlider" min="1" max="20" value="10" step="1">
+                    <div class="value-display" id="timeSpeedValue">10</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Detail</label>
+                    <input type="range" id="detailSlider" min="2" max="6" value="4" step="1">
+                    <div class="value-display" id="detailValue">4</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Karl the Fog</h2>
+            <p>
+                Karl is San Francisco's beloved fog that rolls in from the Pacific Ocean, particularly
+                during summer months. Named affectionately by locals, this marine layer creates the city's
+                iconic atmospheric conditions, draping the Golden Gate Bridge and downtown skyline in
+                a mysterious blanket of grey.
+            </p>
+            <p>
+                This fractal visualization captures Karl's movement across San Francisco's distinctive
+                skyline using recursive Perlin noise algorithms. The fog density varies with fractal
+                layers creating realistic wispy tendrils and thick banks. Watch as day transitions to
+                night with changing sky colors, city lights emerging, and Karl rolling through the city.
+            </p>
+            <p>
+                Adjust fog density to control opacity, speed for Karl's movement rate, time speed for
+                the day/night cycle, and fractal detail for the complexity of fog patterns. The skyline
+                features recognizable landmarks including the Transamerica Pyramid, Salesforce Tower,
+                and rolling hills.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class KarlTheFog {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Fog parameters
+                this.density = 6;
+                this.speed = 5;
+                this.timeSpeed = 10;
+                this.detail = 4;
+                this.isAnimating = false;
+                this.time = 0;
+                this.timeOfDay = 12; // 0-24 hour format
+
+                // SF city map features
+                this.cityFeatures = this.createCityMap();
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('densitySlider').addEventListener('input', (e) => {
+                    this.density = parseInt(e.target.value);
+                    document.getElementById('densityValue').textContent = this.density;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('timeSpeedSlider').addEventListener('input', (e) => {
+                    this.timeSpeed = parseInt(e.target.value);
+                    document.getElementById('timeSpeedValue').textContent = this.timeSpeed;
+                });
+
+                document.getElementById('detailSlider').addEventListener('input', (e) => {
+                    this.detail = parseInt(e.target.value);
+                    document.getElementById('detailValue').textContent = this.detail;
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            createCityMap() {
+                const h = this.canvas.height;
+                const w = this.canvas.width;
+                const centerX = w / 2;
+                const centerY = h / 2;
+
+                return {
+                    // SF Peninsula shape (more accurate to the 7x7 mile square)
+                    peninsula: [
+                        // Starting from northwest, going clockwise
+                        { x: centerX - 180, y: centerY - 220 },  // NW corner (Ocean Beach/Presidio)
+                        { x: centerX - 120, y: centerY - 240 },  // Golden Gate
+                        { x: centerX - 50, y: centerY - 250 },   // North shore
+                        { x: centerX + 20, y: centerY - 240 },   // Northeast
+                        { x: centerX + 80, y: centerY - 200 },   // Fisherman's Wharf area
+                        { x: centerX + 140, y: centerY - 140 },  // East side bulge
+                        { x: centerX + 160, y: centerY - 60 },   // East side
+                        { x: centerX + 170, y: centerY + 20 },   // Dogpatch area
+                        { x: centerX + 150, y: centerY + 100 },  // Bayview
+                        { x: centerX + 100, y: centerY + 180 },  // Southeast corner
+                        { x: centerX + 20, y: centerY + 220 },   // South border
+                        { x: centerX - 80, y: centerY + 230 },   // Southwest
+                        { x: centerX - 160, y: centerY + 220 },  // Ocean Beach south
+                        { x: centerX - 180, y: centerY + 140 },  // West side
+                        { x: centerX - 190, y: centerY + 40 },   // West side
+                        { x: centerX - 190, y: centerY - 60 },   // West side
+                        { x: centerX - 185, y: centerY - 140 },  // West side
+                    ],
+                    // Golden Gate Bridge
+                    goldenGate: {
+                        x1: centerX - 190, y1: centerY - 220,
+                        x2: centerX - 120, y2: centerY - 240,
+                        width: 8
+                    },
+                    // Bay Bridge
+                    bayBridge: {
+                        x1: centerX + 80, y1: centerY - 80,
+                        x2: centerX + 220, y2: centerY - 40,
+                        width: 6
+                    },
+                    // Major neighborhoods/districts (grid blocks)
+                    neighborhoods: [
+                        // Financial District / Downtown
+                        { x: centerX + 10, y: centerY - 90, width: 70, height: 80, name: 'FiDi' },
+                        // Mission
+                        { x: centerX + 10, y: centerY + 20, width: 90, height: 110, name: 'Mission' },
+                        // Richmond
+                        { x: centerX - 160, y: centerY - 120, width: 100, height: 70, name: 'Richmond' },
+                        // Sunset
+                        { x: centerX - 150, y: centerY + 30, width: 110, height: 120, name: 'Sunset' },
+                        // Marina
+                        { x: centerX - 80, y: centerY - 180, width: 80, height: 50, name: 'Marina' },
+                        // SoMa
+                        { x: centerX + 40, y: centerY - 20, width: 80, height: 60, name: 'SoMa' },
+                        // Haight
+                        { x: centerX - 60, y: centerY - 20, width: 60, height: 50, name: 'Haight' },
+                    ],
+                    // Parks
+                    parks: [
+                        // Golden Gate Park (long horizontal rectangle)
+                        { x: centerX - 170, y: centerY - 10, width: 160, height: 35, name: 'GG Park' },
+                        // Presidio (northwest corner)
+                        { x: centerX - 160, y: centerY - 200, width: 70, height: 70, name: 'Presidio' },
+                    ]
+                };
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Karl';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Karl';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            // Perlin noise implementation
+            noise(x, y) {
+                const X = Math.floor(x) & 255;
+                const Y = Math.floor(y) & 255;
+
+                x -= Math.floor(x);
+                y -= Math.floor(y);
+
+                const u = this.fade(x);
+                const v = this.fade(y);
+
+                const n00 = this.grad(X, Y, x, y);
+                const n01 = this.grad(X, Y + 1, x, y - 1);
+                const n10 = this.grad(X + 1, Y, x - 1, y);
+                const n11 = this.grad(X + 1, Y + 1, x - 1, y - 1);
+
+                const nx0 = this.lerp(n00, n10, u);
+                const nx1 = this.lerp(n01, n11, u);
+
+                return this.lerp(nx0, nx1, v);
+            }
+
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            lerp(a, b, t) {
+                return a + t * (b - a);
+            }
+
+            grad(x, y, dx, dy) {
+                const hash = (x * 374761393 + y * 668265263) & 0xFFFFFFFF;
+                const h = hash & 3;
+                return (h === 0 ? dx + dy : h === 1 ? -dx + dy : h === 2 ? dx - dy : -dx - dy);
+            }
+
+            fractalNoise(x, y, octaves) {
+                let value = 0;
+                let amplitude = 1;
+                let frequency = 1;
+                let maxValue = 0;
+
+                for (let i = 0; i < octaves; i++) {
+                    value += this.noise(x * frequency, y * frequency) * amplitude;
+                    maxValue += amplitude;
+                    amplitude *= 0.5;
+                    frequency *= 2;
+                }
+
+                return value / maxValue;
+            }
+
+            getSkyColor() {
+                // Calculate sky color based on time of day
+                const hour = this.timeOfDay % 24;
+
+                if (hour >= 6 && hour < 8) {
+                    // Dawn
+                    const t = (hour - 6) / 2;
+                    return this.interpolateColors(
+                        { r: 25, g: 25, b: 50 },
+                        { r: 255, g: 150, b: 100 },
+                        t
+                    );
+                } else if (hour >= 8 && hour < 18) {
+                    // Day
+                    const t = (hour - 8) / 10;
+                    return this.interpolateColors(
+                        { r: 135, g: 206, b: 235 },
+                        { r: 100, g: 149, b: 237 },
+                        t
+                    );
+                } else if (hour >= 18 && hour < 20) {
+                    // Dusk
+                    const t = (hour - 18) / 2;
+                    return this.interpolateColors(
+                        { r: 255, g: 120, b: 80 },
+                        { r: 25, g: 25, b: 50 },
+                        t
+                    );
+                } else {
+                    // Night
+                    return { r: 15, g: 15, b: 35 };
+                }
+            }
+
+            interpolateColors(c1, c2, t) {
+                return {
+                    r: Math.floor(c1.r + (c2.r - c1.r) * t),
+                    g: Math.floor(c1.g + (c2.g - c1.g) * t),
+                    b: Math.floor(c1.b + (c2.b - c1.b) * t)
+                };
+            }
+
+            drawWater() {
+                // Draw San Francisco Bay water
+                const hour = this.timeOfDay % 24;
+                const isNight = hour < 6 || hour >= 20;
+
+                // Water color changes with time of day
+                let waterColor;
+                if (isNight) {
+                    waterColor = '#1a2a3a';
+                } else if (hour >= 6 && hour < 8) {
+                    waterColor = '#4a6a8a';
+                } else if (hour >= 18 && hour < 20) {
+                    waterColor = '#5a7a9a';
+                } else {
+                    waterColor = '#2a5a8a';
+                }
+
+                this.ctx.fillStyle = waterColor;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            drawCityMap() {
+                const hour = this.timeOfDay % 24;
+                const isNight = hour < 6 || hour >= 20;
+                const city = this.cityFeatures;
+
+                this.ctx.save();
+
+                // Draw peninsula landmass
+                this.ctx.fillStyle = isNight ? '#2a3a2a' : '#4a6a4a';
+                this.ctx.beginPath();
+                this.ctx.moveTo(city.peninsula[0].x, city.peninsula[0].y);
+                city.peninsula.forEach(point => {
+                    this.ctx.lineTo(point.x, point.y);
+                });
+                this.ctx.closePath();
+                this.ctx.fill();
+
+                // Draw peninsula outline
+                this.ctx.strokeStyle = isNight ? '#1a2a1a' : '#3a5a3a';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+
+                // Draw parks
+                this.ctx.fillStyle = isNight ? '#1a3a1a' : '#3a6a3a';
+                city.parks.forEach(park => {
+                    this.ctx.fillRect(park.x, park.y, park.width, park.height);
+                    this.ctx.strokeStyle = isNight ? '#0a2a0a' : '#2a5a2a';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(park.x, park.y, park.width, park.height);
+                });
+
+                // Draw street grid in neighborhoods
+                city.neighborhoods.forEach(hood => {
+                    // Grid background
+                    this.ctx.fillStyle = isNight ? '#3a3a3a' : '#6a6a6a';
+                    this.ctx.fillRect(hood.x, hood.y, hood.width, hood.height);
+
+                    // Street grid
+                    this.ctx.strokeStyle = isNight ? '#2a2a2a' : '#5a5a5a';
+                    this.ctx.lineWidth = 1;
+
+                    // Horizontal streets
+                    for (let i = 0; i < 10; i++) {
+                        const y = hood.y + (hood.height / 10) * i;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(hood.x, y);
+                        this.ctx.lineTo(hood.x + hood.width, y);
+                        this.ctx.stroke();
+                    }
+
+                    // Vertical streets
+                    for (let i = 0; i < 8; i++) {
+                        const x = hood.x + (hood.width / 8) * i;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, hood.y);
+                        this.ctx.lineTo(x, hood.y + hood.height);
+                        this.ctx.stroke();
+                    }
+
+                    // Add lights at night
+                    if (isNight) {
+                        this.ctx.fillStyle = 'rgba(255, 220, 150, 0.4)';
+                        for (let i = 0; i < 30; i++) {
+                            const x = hood.x + Math.random() * hood.width;
+                            const y = hood.y + Math.random() * hood.height;
+                            this.ctx.fillRect(x, y, 2, 2);
+                        }
+                    }
+                });
+
+                // Draw Golden Gate Bridge
+                this.ctx.strokeStyle = '#c84030';
+                this.ctx.lineWidth = city.goldenGate.width;
+                this.ctx.beginPath();
+                this.ctx.moveTo(city.goldenGate.x1, city.goldenGate.y1);
+                this.ctx.lineTo(city.goldenGate.x2, city.goldenGate.y2);
+                this.ctx.stroke();
+
+                // Draw Bay Bridge
+                this.ctx.strokeStyle = '#8a8a8a';
+                this.ctx.lineWidth = city.bayBridge.width;
+                this.ctx.beginPath();
+                this.ctx.moveTo(city.bayBridge.x1, city.bayBridge.y1);
+                this.ctx.lineTo(city.bayBridge.x2, city.bayBridge.y2);
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawFog() {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const resolution = 4; // Draw fog at lower resolution for performance
+
+                // Draw fractal fog layers using canvas drawing (not putImageData)
+                for (let layer = 0; layer < 3; layer++) {
+                    this.ctx.save();
+
+                    const layerOffset = this.time * 0.002 * this.speed + layer * 100;
+                    const layerDensity = this.density * (0.8 + layer * 0.1);
+
+                    for (let y = 0; y < height; y += resolution) {
+                        for (let x = 0; x < width; x += resolution) {
+                            const noiseValue = this.fractalNoise(
+                                x * 0.003 + layerOffset,
+                                y * 0.003 + layer * 0.5,
+                                this.detail
+                            );
+
+                            // Fog is denser in the middle-upper portion of the screen
+                            const heightFactor = Math.max(0, 1 - Math.abs((y / height) - 0.4) * 1.5);
+                            const fogAlpha = Math.max(0, (noiseValue * 0.5 + 0.5) * heightFactor * layerDensity * 0.08);
+
+                            if (fogAlpha > 0.01) {
+                                this.ctx.fillStyle = `rgba(220, 220, 225, ${fogAlpha})`;
+                                this.ctx.fillRect(x, y, resolution, resolution);
+                            }
+                        }
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+
+            updateTimeDisplay() {
+                const hour = Math.floor(this.timeOfDay) % 24;
+                const minute = Math.floor((this.timeOfDay % 1) * 60);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour % 12 || 12;
+
+                document.getElementById('timeDisplay').textContent =
+                    `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+            }
+
+            draw() {
+                this.drawWater();
+                this.drawCityMap();
+                this.drawFog();
+                this.updateTimeDisplay();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time += this.speed;
+                this.timeOfDay += this.timeSpeed * 0.001;
+
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.density = 6;
+                this.speed = 5;
+                this.timeSpeed = 10;
+                this.detail = 4;
+                this.time = 0;
+                this.timeOfDay = 12;
+
+                document.getElementById('densitySlider').value = 6;
+                document.getElementById('densityValue').textContent = '6';
+                document.getElementById('speedSlider').value = 5;
+                document.getElementById('speedValue').textContent = '5';
+                document.getElementById('timeSpeedSlider').value = 10;
+                document.getElementById('timeSpeedValue').textContent = '10';
+                document.getElementById('detailSlider').value = 4;
+                document.getElementById('detailValue').textContent = '4';
+
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('karlCanvas');
+            new KarlTheFog(canvas);
+        });
+    </script>
+</body>
+</html>
