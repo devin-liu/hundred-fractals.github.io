@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>011 - Fall Leaves | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #2d1810 0%, #4a2f1f 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #e8a87c;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #f4c2a0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(232, 168, 124, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #87CEEB;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d97742 0%, #c85a2f 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(217, 119, 66, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(232, 168, 124, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(232, 168, 124, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #e8a87c;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #d97742;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #f4c2a0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(232, 168, 124, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(232, 168, 124, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #e8a87c;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>011 - Fall Leaves</h1>
+            <div class="info">October 24, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="leavesCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Autumn</button>
+            <button id="windBtn">Wind Gust!</button>
+            <button id="resetBtn">Reset to Summer</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Leaf Count</label>
+                    <input type="range" id="leafSlider" min="50" max="500" value="200" step="25">
+                    <div class="value-display" id="leafValue">200</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fall Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Wind Strength</label>
+                    <input type="range" id="windSlider" min="0" max="10" value="3" step="1">
+                    <div class="value-display" id="windValue">3</div>
+                </div>
+                <div class="slider-group">
+                    <label>Tree Count</label>
+                    <input type="range" id="treeSlider" min="5" max="20" value="10" step="1">
+                    <div class="value-display" id="treeValue">10</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Fall Leaves: Autumn Transformation</h2>
+            <p>
+                As autumn arrives, deciduous trees transform their canopies from lush green to vibrant
+                oranges, reds, and yellows. This process, called senescence, occurs as chlorophyll
+                breaks down and reveals the carotenoid pigments that were hidden beneath. Eventually,
+                an abscission layer forms at the base of each leaf stem, causing leaves to detach and
+                fall to the forest floor.
+            </p>
+            <p>
+                This fractal visualization simulates a forest transitioning through autumn. Watch as
+                green leaves gradually turn orange and red, then gently fall to create a carpet on the
+                ground. Each leaf follows realistic physics with swaying, rotation, and drift patterns
+                influenced by wind. The fractal nature emerges from the recursive branching of trees
+                and the chaotic turbulence of falling leaves.
+            </p>
+            <p>
+                Trees are drawn with fractal branching algorithms where each branch splits into smaller
+                branches at recursive levels. Leaves transition through multiple color states, fall with
+                realistic physics, and accumulate on the ground. Adjust leaf count, fall speed, wind
+                strength, and tree density to create your perfect autumn scene.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class FallLeaves {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.leafCount = 200;
+                this.fallSpeed = 5;
+                this.windStrength = 3;
+                this.treeCount = 10;
+                this.isAnimating = false;
+                this.time = 0;
+
+                // Elements
+                this.trees = [];
+                this.leaves = [];
+                this.groundLeaves = [];
+
+                this.initTrees();
+                this.initLeaves();
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('windBtn').addEventListener('click', () => {
+                    this.windGust();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('leafSlider').addEventListener('input', (e) => {
+                    this.leafCount = parseInt(e.target.value);
+                    document.getElementById('leafValue').textContent = this.leafCount;
+                    this.initLeaves();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.fallSpeed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.fallSpeed;
+                });
+
+                document.getElementById('windSlider').addEventListener('input', (e) => {
+                    this.windStrength = parseInt(e.target.value);
+                    document.getElementById('windValue').textContent = this.windStrength;
+                });
+
+                document.getElementById('treeSlider').addEventListener('input', (e) => {
+                    this.treeCount = parseInt(e.target.value);
+                    document.getElementById('treeValue').textContent = this.treeCount;
+                    this.initTrees();
+                    this.initLeaves();
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            initTrees() {
+                this.trees = [];
+                for (let i = 0; i < this.treeCount; i++) {
+                    const x = (this.canvas.width / (this.treeCount + 1)) * (i + 1);
+                    const y = this.canvas.height - 80;
+                    const height = 150 + Math.random() * 100;
+
+                    this.trees.push({
+                        x: x,
+                        y: y,
+                        height: height,
+                        depth: 4 + Math.floor(Math.random() * 2),
+                        angle: Math.random() * 0.2 - 0.1
+                    });
+                }
+            }
+
+            initLeaves() {
+                this.leaves = [];
+                this.groundLeaves = [];
+
+                this.trees.forEach(tree => {
+                    const leavesPerTree = Math.floor(this.leafCount / this.treeCount);
+
+                    for (let i = 0; i < leavesPerTree; i++) {
+                        // Position leaves throughout the tree canopy (upper portion)
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * 60;
+                        const heightInCanopy = Math.random(); // 0 = top, 1 = bottom of canopy
+
+                        // Position leaves in the upper 70% of the tree
+                        const leafX = tree.x + Math.cos(angle) * distance;
+                        const leafY = tree.y - tree.height * (0.3 + heightInCanopy * 0.7);
+
+                        this.leaves.push({
+                            x: leafX,
+                            y: leafY,
+                            baseX: leafX,
+                            baseY: leafY,
+                            vx: 0,
+                            vy: 0,
+                            rotation: Math.random() * Math.PI * 2,
+                            rotationSpeed: (Math.random() - 0.5) * 0.1,
+                            size: 8 + Math.random() * 6,
+                            colorProgress: 0, // Start all leaves green
+                            onTree: true,
+                            swayOffset: Math.random() * Math.PI * 2,
+                            fallDelay: Math.random() * 200,
+                            treeRef: tree
+                        });
+                    }
+                });
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Autumn';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Autumn';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            windGust() {
+                this.leaves.forEach(leaf => {
+                    if (leaf.onTree && Math.random() > 0.3) {
+                        leaf.onTree = false;
+                        leaf.vx = (Math.random() - 0.5) * this.windStrength * 2;
+                        leaf.vy = Math.random() * 2;
+                    } else if (!leaf.onTree) {
+                        leaf.vx += (Math.random() - 0.5) * this.windStrength * 3;
+                    }
+                });
+            }
+
+            updateLeaves() {
+                this.leaves.forEach(leaf => {
+                    if (leaf.onTree) {
+                        // Keep leaf at its fixed position on tree (with slight sway)
+                        const sway = Math.sin(this.time * 0.05 + leaf.swayOffset) * 1;
+                        leaf.x = leaf.baseX + sway;
+                        leaf.y = leaf.baseY;
+
+                        // Gradually change color on tree
+                        leaf.colorProgress += 0.001 * this.fallSpeed;
+
+                        // Eventually fall
+                        if (leaf.colorProgress > 0.6 && this.time > leaf.fallDelay) {
+                            if (Math.random() < 0.002 * this.fallSpeed) {
+                                leaf.onTree = false;
+                                leaf.vx = (Math.random() - 0.5) * this.windStrength * 0.5;
+                                leaf.vy = 1;
+                            }
+                        }
+                    } else {
+                        // Falling physics
+                        leaf.vy += 0.05; // Gravity
+                        leaf.vx += (Math.random() - 0.5) * 0.2; // Random drift
+
+                        // Wind effect
+                        leaf.vx += Math.sin(this.time * 0.03) * this.windStrength * 0.05;
+
+                        // Apply velocity
+                        leaf.x += leaf.vx;
+                        leaf.y += leaf.vy * this.fallSpeed * 0.3;
+
+                        // Rotation
+                        leaf.rotation += leaf.rotationSpeed;
+
+                        // Air resistance
+                        leaf.vx *= 0.99;
+                        leaf.vy = Math.min(leaf.vy, 3);
+
+                        // Land on ground
+                        if (leaf.y >= this.canvas.height - 90) {
+                            this.groundLeaves.push({
+                                x: leaf.x,
+                                y: this.canvas.height - 90 + Math.random() * 10,
+                                rotation: leaf.rotation,
+                                size: leaf.size,
+                                color: this.getLeafColor(leaf.colorProgress)
+                            });
+
+                            // Reset leaf to tree
+                            const tree = this.trees[Math.floor(Math.random() * this.trees.length)];
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = Math.random() * 60;
+                            const heightInCanopy = Math.random();
+
+                            // Position leaves in the upper 70% of the tree
+                            const leafX = tree.x + Math.cos(angle) * distance;
+                            const leafY = tree.y - tree.height * (0.3 + heightInCanopy * 0.7);
+
+                            leaf.x = leafX;
+                            leaf.y = leafY;
+                            leaf.baseX = leafX;
+                            leaf.baseY = leafY;
+                            leaf.vx = 0;
+                            leaf.vy = 0;
+                            leaf.onTree = true;
+                            leaf.colorProgress = 0;
+                            leaf.fallDelay = this.time + Math.random() * 200;
+                            leaf.treeRef = tree;
+                        }
+                    }
+                });
+            }
+
+            getLeafColor(progress) {
+                // Transition from green to yellow/orange to red
+                if (progress < 0.3) {
+                    // Green
+                    return { r: 50 + progress * 300, g: 150 + progress * 100, b: 50 };
+                } else if (progress < 0.6) {
+                    // Green to yellow/orange
+                    const t = (progress - 0.3) / 0.3;
+                    return {
+                        r: 140 + t * 115,
+                        g: 180 - t * 30,
+                        b: 50 - t * 30
+                    };
+                } else {
+                    // Orange to red
+                    const t = (progress - 0.6) / 0.4;
+                    return {
+                        r: 255,
+                        g: 150 - t * 70,
+                        b: 20 - t * 20
+                    };
+                }
+            }
+
+            drawTree(tree) {
+                this.ctx.save();
+                this.ctx.translate(tree.x, tree.y);
+                this.drawBranch(0, 0, tree.height, -Math.PI / 2, tree.depth, tree.height / 8);
+                this.ctx.restore();
+            }
+
+            drawBranch(x, y, length, angle, depth, thickness) {
+                if (depth === 0 || length < 2) return;
+
+                const endX = x + Math.cos(angle) * length;
+                const endY = y + Math.sin(angle) * length;
+
+                // Draw branch
+                this.ctx.strokeStyle = depth > 2 ? '#3a2817' : '#5a4027';
+                this.ctx.lineWidth = thickness;
+                this.ctx.lineCap = 'round';
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+
+                // Recursive branches
+                if (depth > 1) {
+                    const branchCount = 2 + (depth > 3 ? 1 : 0);
+                    for (let i = 0; i < branchCount; i++) {
+                        const newAngle = angle + (Math.random() - 0.5) * 0.8;
+                        const newLength = length * (0.6 + Math.random() * 0.2);
+                        const newThickness = thickness * 0.7;
+
+                        this.drawBranch(endX, endY, newLength, newAngle, depth - 1, newThickness);
+                    }
+                }
+            }
+
+            drawLeaf(leaf) {
+                this.ctx.save();
+                this.ctx.translate(leaf.x, leaf.y);
+                this.ctx.rotate(leaf.rotation);
+
+                const color = this.getLeafColor(leaf.colorProgress);
+                this.ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+                // Leaf shape (simple oval with point)
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, 0, leaf.size, leaf.size * 0.6, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Leaf vein
+                this.ctx.strokeStyle = `rgba(${color.r * 0.7}, ${color.g * 0.7}, ${color.b * 0.7}, 0.5)`;
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -leaf.size * 0.6);
+                this.ctx.lineTo(0, leaf.size * 0.6);
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawGround() {
+                // Ground
+                const gradient = this.ctx.createLinearGradient(0, this.canvas.height - 100, 0, this.canvas.height);
+                gradient.addColorStop(0, '#3a5a3a');
+                gradient.addColorStop(1, '#2a4a2a');
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, this.canvas.height - 90, this.canvas.width, 90);
+
+                // Draw accumulated leaves on ground
+                this.groundLeaves.forEach(leaf => {
+                    this.ctx.save();
+                    this.ctx.translate(leaf.x, leaf.y);
+                    this.ctx.rotate(leaf.rotation);
+
+                    this.ctx.fillStyle = `rgb(${leaf.color.r}, ${leaf.color.g}, ${leaf.color.b})`;
+                    this.ctx.globalAlpha = 0.8;
+
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(0, 0, leaf.size, leaf.size * 0.6, 0, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    this.ctx.restore();
+                });
+            }
+
+            draw() {
+                // Sky gradient
+                const skyGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(1, '#B0D9F0');
+
+                this.ctx.fillStyle = skyGradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.drawGround();
+
+                // Draw trees
+                this.trees.forEach(tree => {
+                    this.drawTree(tree);
+                });
+
+                // Draw leaves
+                this.leaves.forEach(leaf => {
+                    this.drawLeaf(leaf);
+                });
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time++;
+                this.updateLeaves();
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.time = 0;
+                this.groundLeaves = [];
+                this.initLeaves();
+
+                // Reset all leaves to green
+                this.leaves.forEach(leaf => {
+                    leaf.colorProgress = 0;
+                    leaf.onTree = true;
+                });
+
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('leavesCanvas');
+            new FallLeaves(canvas);
+        });
+    </script>
+</body>
+</html>
