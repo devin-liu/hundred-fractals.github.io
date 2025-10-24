@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>010 - Wok Toss | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #ff6b35;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ff8c5a;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.2);
+            background: #0a0a0a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 107, 53, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 107, 53, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #ff6b35;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #ff6b35;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #f7931e;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 107, 53, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 107, 53, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #ff6b35;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>010 - Wok Toss</h1>
+            <div class="info">October 23, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="wokCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Tossing</button>
+            <button id="tossBtn">Manual Toss!</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Particle Count</label>
+                    <input type="range" id="particleSlider" min="100" max="1000" value="400" step="50">
+                    <div class="value-display" id="particleValue">400</div>
+                </div>
+                <div class="slider-group">
+                    <label>Toss Force</label>
+                    <input type="range" id="forceSlider" min="1" max="10" value="6" step="1">
+                    <div class="value-display" id="forceValue">6</div>
+                </div>
+                <div class="slider-group">
+                    <label>Toss Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fire Intensity</label>
+                    <input type="range" id="fireSlider" min="0" max="10" value="5" step="1">
+                    <div class="value-display" id="fireValue">5</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Wok Toss: The Art of Stir-Frying</h2>
+            <p>
+                The wok toss (bào) is a fundamental technique in Chinese cooking where ingredients are
+                rapidly tossed and flipped in a hot wok. This creates the characteristic "wok hei" -
+                the breath of the wok - where ingredients are seared at extremely high heat while being
+                constantly moved through the flames.
+            </p>
+            <p>
+                This fractal visualization uses particle physics to simulate fried rice being tossed
+                in a wok. Each grain of rice, vegetable piece, and ingredient follows realistic
+                parabolic trajectories as they're thrown upward and caught again. The fractal nature
+                comes from the recursive turbulence patterns in the flames and the chaotic paths of
+                hundreds of particles.
+            </p>
+            <p>
+                Watch as white rice grains, green vegetables, yellow egg pieces, and dark soy sauce
+                particles dance through the air above the wok. Occasional bursts of flame erupt when
+                the toss brings ingredients through the hottest part of the fire. Adjust particle count
+                for more ingredients, toss force for height, speed for frequency, and fire intensity
+                for more dramatic flames.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class WokToss {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1000;
+                this.canvas.height = 700;
+
+                // Wok parameters
+                this.particleCount = 400;
+                this.tossForce = 6;
+                this.tossSpeed = 5;
+                this.fireIntensity = 5;
+                this.isAnimating = false;
+                this.time = 0;
+
+                // Particles
+                this.particles = [];
+                this.flames = [];
+
+                // Wok position
+                this.wokX = this.canvas.width / 2;
+                this.wokY = this.canvas.height - 150;
+                this.wokRadius = 180;
+
+                this.initParticles();
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('tossBtn').addEventListener('click', () => {
+                    this.performToss();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('particleSlider').addEventListener('input', (e) => {
+                    this.particleCount = parseInt(e.target.value);
+                    document.getElementById('particleValue').textContent = this.particleCount;
+                    this.initParticles();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('forceSlider').addEventListener('input', (e) => {
+                    this.tossForce = parseInt(e.target.value);
+                    document.getElementById('forceValue').textContent = this.tossForce;
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.tossSpeed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.tossSpeed;
+                });
+
+                document.getElementById('fireSlider').addEventListener('input', (e) => {
+                    this.fireIntensity = parseInt(e.target.value);
+                    document.getElementById('fireValue').textContent = this.fireIntensity;
+                });
+            }
+
+            initParticles() {
+                this.particles = [];
+                const colors = [
+                    { r: 255, g: 255, b: 255, name: 'rice' },      // White rice
+                    { r: 255, g: 255, b: 255, name: 'rice' },      // More rice
+                    { r: 50, g: 180, b: 50, name: 'vegetable' },   // Green veggies
+                    { r: 255, g: 220, b: 100, name: 'egg' },       // Yellow egg
+                    { r: 80, g: 60, b: 40, name: 'soysauce' },     // Dark soy sauce
+                ];
+
+                for (let i = 0; i < this.particleCount; i++) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const angle = Math.random() * Math.PI;
+                    const distance = Math.random() * this.wokRadius * 0.8;
+
+                    this.particles.push({
+                        x: this.wokX + Math.cos(angle) * distance,
+                        y: this.wokY - Math.abs(Math.sin(angle) * distance * 0.3),
+                        vx: 0,
+                        vy: 0,
+                        color: color,
+                        size: 3 + Math.random() * 2,
+                        inWok: true
+                    });
+                }
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Tossing';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Tossing';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            performToss() {
+                // Toss all particles in wok
+                this.particles.forEach(p => {
+                    if (p.inWok) {
+                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6;
+                        const speed = 8 + this.tossForce * 2 + Math.random() * 5;
+
+                        p.vx = Math.cos(angle) * speed * (Math.random() - 0.5) * 0.5;
+                        p.vy = Math.sin(angle) * speed;
+                        p.inWok = false;
+                    }
+                });
+
+                // Create fire burst
+                if (this.fireIntensity > 0) {
+                    for (let i = 0; i < this.fireIntensity * 5; i++) {
+                        this.flames.push({
+                            x: this.wokX + (Math.random() - 0.5) * this.wokRadius * 0.8,
+                            y: this.wokY - 20,
+                            vx: (Math.random() - 0.5) * 2,
+                            vy: -5 - Math.random() * 10,
+                            life: 1,
+                            size: 10 + Math.random() * 20
+                        });
+                    }
+                }
+            }
+
+            updateParticles() {
+                const gravity = 0.5;
+
+                this.particles.forEach(p => {
+                    if (!p.inWok) {
+                        // Apply physics
+                        p.vy += gravity;
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        // Check if particle lands back in wok
+                        const dx = p.x - this.wokX;
+                        const dy = p.y - this.wokY;
+                        const distFromCenter = Math.sqrt(dx * dx);
+
+                        // Wok is a parabola shape
+                        const wokHeight = (distFromCenter * distFromCenter) / (this.wokRadius * 2);
+
+                        if (distFromCenter < this.wokRadius && p.y >= this.wokY - wokHeight) {
+                            p.inWok = true;
+                            p.vx = 0;
+                            p.vy = 0;
+                            // Position in wok
+                            const angle = Math.atan2(dy, dx);
+                            const distance = distFromCenter;
+                            p.x = this.wokX + Math.cos(angle) * distance;
+                            p.y = this.wokY - wokHeight;
+                        }
+
+                        // Remove particles that fall off screen
+                        if (p.y > this.canvas.height + 50) {
+                            p.inWok = true;
+                            const angle = Math.random() * Math.PI;
+                            const distance = Math.random() * this.wokRadius * 0.8;
+                            p.x = this.wokX + Math.cos(angle) * distance;
+                            p.y = this.wokY - Math.abs(Math.sin(angle) * distance * 0.3);
+                            p.vx = 0;
+                            p.vy = 0;
+                        }
+                    }
+                });
+            }
+
+            updateFlames() {
+                this.flames = this.flames.filter(f => {
+                    f.x += f.vx;
+                    f.y += f.vy;
+                    f.vy -= 0.2; // Float upward
+                    f.life -= 0.02;
+                    f.size *= 0.95;
+
+                    return f.life > 0;
+                });
+            }
+
+            drawWok() {
+                this.ctx.save();
+
+                // Draw wok shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(this.wokX, this.canvas.height - 100, this.wokRadius * 0.9, 30, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Draw wok body (parabolic curve)
+                const gradient = this.ctx.createRadialGradient(
+                    this.wokX, this.wokY - 50, 0,
+                    this.wokX, this.wokY, this.wokRadius
+                );
+                gradient.addColorStop(0, '#2a2a2a');
+                gradient.addColorStop(0.7, '#1a1a1a');
+                gradient.addColorStop(1, '#0a0a0a');
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.wokX - this.wokRadius, this.wokY);
+
+                // Draw parabolic curve
+                for (let i = 0; i <= 50; i++) {
+                    const t = i / 50;
+                    const x = this.wokX + (t - 0.5) * this.wokRadius * 2;
+                    const distFromCenter = Math.abs((t - 0.5) * this.wokRadius * 2);
+                    const y = this.wokY - (distFromCenter * distFromCenter) / (this.wokRadius * 2);
+                    this.ctx.lineTo(x, y);
+                }
+
+                this.ctx.lineTo(this.wokX + this.wokRadius, this.wokY);
+                this.ctx.closePath();
+                this.ctx.fill();
+
+                // Draw wok rim highlight
+                this.ctx.strokeStyle = '#4a4a4a';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.arc(this.wokX - this.wokRadius * 0.9, this.wokY - 10, 5, 0, Math.PI * 2);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.arc(this.wokX + this.wokRadius * 0.9, this.wokY - 10, 5, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawFlames() {
+                this.flames.forEach(f => {
+                    this.ctx.save();
+
+                    const gradient = this.ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.size);
+                    gradient.addColorStop(0, `rgba(255, 220, 100, ${f.life * 0.8})`);
+                    gradient.addColorStop(0.3, `rgba(255, 140, 50, ${f.life * 0.6})`);
+                    gradient.addColorStop(0.6, `rgba(255, 70, 30, ${f.life * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    this.ctx.restore();
+                });
+            }
+
+            drawParticles() {
+                this.particles.forEach(p => {
+                    this.ctx.save();
+
+                    // Add glow effect for particles in motion
+                    if (!p.inWok) {
+                        this.ctx.shadowBlur = 5;
+                        this.ctx.shadowColor = `rgb(${p.color.r}, ${p.color.g}, ${p.color.b})`;
+                    }
+
+                    this.ctx.fillStyle = `rgb(${p.color.r}, ${p.color.g}, ${p.color.b})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Add small highlight
+                    if (p.color.name === 'rice' || p.color.name === 'egg') {
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+
+                    this.ctx.restore();
+                });
+            }
+
+            draw() {
+                // Clear with dark background
+                this.ctx.fillStyle = '#0a0a0a';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.drawFlames();
+                this.drawWok();
+                this.drawParticles();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time++;
+
+                // Auto toss at intervals based on speed
+                if (this.time % Math.floor(60 / this.tossSpeed) === 0) {
+                    this.performToss();
+                }
+
+                this.updateParticles();
+                this.updateFlames();
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.particleCount = 400;
+                this.tossForce = 6;
+                this.tossSpeed = 5;
+                this.fireIntensity = 5;
+                this.time = 0;
+                this.flames = [];
+
+                document.getElementById('particleSlider').value = 400;
+                document.getElementById('particleValue').textContent = '400';
+                document.getElementById('forceSlider').value = 6;
+                document.getElementById('forceValue').textContent = '6';
+                document.getElementById('speedSlider').value = 5;
+                document.getElementById('speedValue').textContent = '5';
+                document.getElementById('fireSlider').value = 5;
+                document.getElementById('fireValue').textContent = '5';
+
+                this.initParticles();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('wokCanvas');
+            new WokToss(canvas);
+        });
+    </script>
+</body>
+</html>
