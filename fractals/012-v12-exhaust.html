@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>012 - V12 Exhaust | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #ff3333;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ff6666;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 51, 51, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(255, 51, 51, 0.3);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff3333 0%, #cc0000 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 51, 51, 0.5);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ff6600 0%, #ff3300 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 51, 51, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 51, 51, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #ff6666;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #ff3333;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ff9999;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .rpm-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff3333;
+            font-family: monospace;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 51, 51, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 51, 51, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #ff6666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>012 - V12 Exhaust</h1>
+            <div class="info">October 25, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="engineCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Engine</button>
+            <button id="revBtn">Rev It!</button>
+            <button id="resetBtn">Kill Engine</button>
+            <div class="rpm-display" id="rpmDisplay">0 RPM</div>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Idle RPM</label>
+                    <input type="range" id="idleSlider" min="500" max="2000" value="1000" step="100">
+                    <div class="value-display" id="idleValue">1000</div>
+                </div>
+                <div class="slider-group">
+                    <label>Redline RPM</label>
+                    <input type="range" id="redlineSlider" min="6000" max="9000" value="8000" step="200">
+                    <div class="value-display" id="redlineValue">8000</div>
+                </div>
+                <div class="slider-group">
+                    <label>Heat Intensity</label>
+                    <input type="range" id="heatSlider" min="1" max="10" value="7" step="1">
+                    <div class="value-display" id="heatValue">7</div>
+                </div>
+                <div class="slider-group">
+                    <label>Exhaust Glow</label>
+                    <input type="range" id="glowSlider" min="1" max="10" value="8" step="1">
+                    <div class="value-display" id="glowValue">8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>V12 Exhaust: High-Performance Engineering</h2>
+            <p>
+                The V12 engine represents the pinnacle of automotive engineering, with twelve cylinders
+                arranged in a V configuration. The Pagani Zonda's 7.3L naturally aspirated V12 produces
+                over 750 horsepower at 8,000 RPM. When running at high speed, the exhaust headers glow
+                red-hot from the extreme heat of combustion gases exceeding 1,500°F.
+            </p>
+            <p>
+                This fractal visualization captures the thermal dynamics of a high-performance V12
+                exhaust system. Watch as the stainless steel headers transition from cool silver to
+                orange, then brilliant red as engine RPM increases. Heat waves shimmer around the
+                pipes, and occasional bursts of flame erupt from the collectors during overrun.
+            </p>
+            <p>
+                The fractal nature emerges from the recursive branching of the exhaust primaries merging
+                into collectors, and the chaotic turbulence patterns of heat waves and exhaust gases.
+                Adjust idle RPM, redline, heat intensity, and glow brightness to customize your engine.
+                Hit "Rev It!" for a full throttle pull to redline!
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class V12Exhaust {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Engine parameters
+                this.idleRPM = 1000;
+                this.redlineRPM = 8000;
+                this.currentRPM = 0;
+                this.targetRPM = 0;
+                this.heatIntensity = 7;
+                this.glowIntensity = 8;
+                this.isRunning = false;
+                this.time = 0;
+
+                // Heat particles
+                this.heatWaves = [];
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleEngine();
+                });
+
+                document.getElementById('revBtn').addEventListener('click', () => {
+                    this.revEngine();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.killEngine();
+                });
+
+                document.getElementById('idleSlider').addEventListener('input', (e) => {
+                    this.idleRPM = parseInt(e.target.value);
+                    document.getElementById('idleValue').textContent = this.idleRPM;
+                });
+
+                document.getElementById('redlineSlider').addEventListener('input', (e) => {
+                    this.redlineRPM = parseInt(e.target.value);
+                    document.getElementById('redlineValue').textContent = this.redlineRPM;
+                });
+
+                document.getElementById('heatSlider').addEventListener('input', (e) => {
+                    this.heatIntensity = parseInt(e.target.value);
+                    document.getElementById('heatValue').textContent = this.heatIntensity;
+                });
+
+                document.getElementById('glowSlider').addEventListener('input', (e) => {
+                    this.glowIntensity = parseInt(e.target.value);
+                    document.getElementById('glowValue').textContent = this.glowIntensity;
+                });
+            }
+
+            toggleEngine() {
+                this.isRunning = !this.isRunning;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isRunning) {
+                    btn.textContent = 'Stop Engine';
+                    btn.classList.add('active');
+                    this.targetRPM = this.idleRPM;
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Engine';
+                    btn.classList.remove('active');
+                    this.targetRPM = 0;
+                }
+            }
+
+            revEngine() {
+                if (this.isRunning) {
+                    this.targetRPM = this.redlineRPM;
+                    setTimeout(() => {
+                        if (this.isRunning) {
+                            this.targetRPM = this.idleRPM;
+                        }
+                    }, 2000);
+                }
+            }
+
+            killEngine() {
+                this.isRunning = false;
+                this.targetRPM = 0;
+                this.currentRPM = 0;
+                const btn = document.getElementById('animateBtn');
+                btn.textContent = 'Start Engine';
+                btn.classList.remove('active');
+                this.heatWaves = [];
+                this.draw();
+            }
+
+            updateRPM() {
+                // Smooth RPM changes
+                const diff = this.targetRPM - this.currentRPM;
+                const acceleration = diff > 0 ? 50 : 100; // Rev up slower, rev down faster
+
+                if (Math.abs(diff) > 10) {
+                    this.currentRPM += diff / acceleration;
+                } else {
+                    this.currentRPM = this.targetRPM;
+                }
+
+                // RPM fluctuation at idle
+                if (this.currentRPM > 0 && this.currentRPM < this.idleRPM * 1.2) {
+                    this.currentRPM += (Math.random() - 0.5) * 30;
+                }
+
+                this.currentRPM = Math.max(0, Math.min(this.currentRPM, this.redlineRPM));
+
+                // Update display
+                document.getElementById('rpmDisplay').textContent =
+                    `${Math.floor(this.currentRPM).toLocaleString()} RPM`;
+            }
+
+            getExhaustTemp() {
+                // Temperature based on RPM (0 = cold, 1 = max temp)
+                return Math.min(1, this.currentRPM / this.redlineRPM);
+            }
+
+            getHeatColor(temp) {
+                // Cold = silver, warm = orange, hot = red, max = bright red
+                if (temp < 0.2) {
+                    // Silver/gray
+                    const t = temp / 0.2;
+                    return {
+                        r: 140 + t * 60,
+                        g: 140 + t * 20,
+                        b: 140
+                    };
+                } else if (temp < 0.5) {
+                    // Orange glow
+                    const t = (temp - 0.2) / 0.3;
+                    return {
+                        r: 200 + t * 55,
+                        g: 160 - t * 60,
+                        b: 140 - t * 40
+                    };
+                } else {
+                    // Red hot
+                    const t = (temp - 0.5) / 0.5;
+                    return {
+                        r: 255,
+                        g: 100 - t * 80,
+                        b: 100 - t * 100
+                    };
+                }
+            }
+
+            drawEngine() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                this.ctx.save();
+
+                // Main engine block (V-shape)
+                this.ctx.fillStyle = '#2a2a2a';
+                this.ctx.beginPath();
+                // Bottom of V (where banks meet)
+                this.ctx.moveTo(centerX - 280, centerY);
+                // Left bank
+                this.ctx.lineTo(centerX - 220, centerY - 100);
+                this.ctx.lineTo(centerX + 220, centerY - 100);
+                // Right bank
+                this.ctx.lineTo(centerX + 280, centerY);
+                this.ctx.lineTo(centerX + 220, centerY + 100);
+                this.ctx.lineTo(centerX - 220, centerY + 100);
+                this.ctx.closePath();
+                this.ctx.fill();
+
+                // Valve covers (upper parts of V)
+                this.ctx.fillStyle = '#1a1a1a';
+                // Left valve cover
+                this.ctx.fillRect(centerX - 260, centerY - 120, 220, 40);
+                // Right valve cover
+                this.ctx.fillRect(centerX + 40, centerY - 120, 220, 40);
+
+                // Oil pan (bottom)
+                this.ctx.fillStyle = '#1a1a1a';
+                this.ctx.fillRect(centerX - 240, centerY + 80, 480, 40);
+
+                // Intercooler on top
+                this.ctx.fillStyle = '#0a0a0a';
+                for (let i = 0; i < 35; i++) {
+                    this.ctx.fillRect(centerX - 280, centerY - 200 + i * 4, 560, 2);
+                }
+
+                // Intercooler frame
+                this.ctx.strokeStyle = '#2a2a2a';
+                this.ctx.lineWidth = 4;
+                this.ctx.strokeRect(centerX - 290, centerY - 210, 580, 80);
+
+                // Cylinder head bolts
+                this.ctx.fillStyle = '#4a4a4a';
+                for (let i = 0; i < 6; i++) {
+                    // Left bank bolts
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX - 240 + i * 40, centerY - 90, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Right bank bolts
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX - 240 + i * 40, centerY + 90, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+
+                // Engine block edges/definition
+                this.ctx.strokeStyle = '#1a1a1a';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX - 280, centerY);
+                this.ctx.lineTo(centerX - 220, centerY - 100);
+                this.ctx.lineTo(centerX + 220, centerY - 100);
+                this.ctx.lineTo(centerX + 280, centerY);
+                this.ctx.lineTo(centerX + 220, centerY + 100);
+                this.ctx.lineTo(centerX - 220, centerY + 100);
+                this.ctx.closePath();
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawExhaustHeaders() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const temp = this.getExhaustTemp();
+
+                // Left bank (6 cylinders)
+                for (let i = 0; i < 6; i++) {
+                    this.drawExhaustPipe(
+                        centerX - 200 + i * 40,
+                        centerY + 80,
+                        -45 - i * 5,
+                        180 + i * 20,
+                        temp + Math.random() * 0.1,
+                        i
+                    );
+                }
+
+                // Right bank (6 cylinders)
+                for (let i = 0; i < 6; i++) {
+                    this.drawExhaustPipe(
+                        centerX - 200 + i * 40,
+                        centerY - 80,
+                        45 + i * 5,
+                        180 + i * 20,
+                        temp + Math.random() * 0.1,
+                        i + 6
+                    );
+                }
+            }
+
+            drawExhaustPipe(x, y, angle, length, temp, index) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+
+                const radians = (angle * Math.PI) / 180;
+                const endX = Math.cos(radians) * length;
+                const endY = Math.sin(radians) * length;
+
+                const color = this.getHeatColor(temp);
+
+                // Outer glow
+                if (temp > 0.3) {
+                    this.ctx.shadowBlur = 20 * temp * (this.glowIntensity / 10);
+                    this.ctx.shadowColor = `rgb(255, ${100 - temp * 80}, 0)`;
+                }
+
+                // Main pipe with gradient
+                const gradient = this.ctx.createLinearGradient(0, 0, endX, endY);
+                gradient.addColorStop(0, `rgb(${color.r}, ${color.g}, ${color.b})`);
+
+                const endColor = this.getHeatColor(Math.min(1, temp * 1.2));
+                gradient.addColorStop(1, `rgb(${endColor.r}, ${endColor.g}, ${endColor.b})`);
+
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 12;
+                this.ctx.lineCap = 'round';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+
+                // Highlight
+                this.ctx.shadowBlur = 0;
+                this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + temp * 0.3})`;
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(2, -3);
+                this.ctx.lineTo(endX + 2, endY - 3);
+                this.ctx.stroke();
+
+                // Generate heat waves at high temps
+                if (temp > 0.4 && Math.random() < 0.1 * (this.heatIntensity / 10)) {
+                    this.heatWaves.push({
+                        x: x + endX,
+                        y: y + endY,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -2 - Math.random() * 2,
+                        life: 1,
+                        size: 5 + Math.random() * 10
+                    });
+                }
+
+                this.ctx.restore();
+            }
+
+            drawHeatWaves() {
+                this.heatWaves = this.heatWaves.filter(wave => {
+                    wave.x += wave.vx;
+                    wave.y += wave.vy;
+                    wave.vy -= 0.1; // Float upward
+                    wave.life -= 0.02;
+                    wave.size *= 0.98;
+
+                    if (wave.life > 0) {
+                        this.ctx.save();
+
+                        const gradient = this.ctx.createRadialGradient(
+                            wave.x, wave.y, 0,
+                            wave.x, wave.y, wave.size
+                        );
+                        gradient.addColorStop(0, `rgba(255, 150, 0, ${wave.life * 0.3})`);
+                        gradient.addColorStop(0.5, `rgba(255, 100, 0, ${wave.life * 0.15})`);
+                        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.beginPath();
+                        this.ctx.arc(wave.x, wave.y, wave.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                        this.ctx.restore();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            draw() {
+                // Background
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.drawHeatWaves();
+                this.drawExhaustHeaders();
+                this.drawEngine();
+            }
+
+            animate() {
+                if (!this.isRunning && this.currentRPM < 10) return;
+
+                this.time++;
+                this.updateRPM();
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('engineCanvas');
+            new V12Exhaust(canvas);
+        });
+    </script>
+</body>
+</html>
