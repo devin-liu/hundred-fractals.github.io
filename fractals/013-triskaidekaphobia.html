@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>013 - Triskaidekaphobia | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(153, 153, 153, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #0a0a0a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #666 0%, #444 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(153, 153, 153, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #999 0%, #666 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(153, 153, 153, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(153, 153, 153, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #999;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #999;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(153, 153, 153, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(153, 153, 153, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .thirteen {
+            text-decoration: line-through;
+            color: #ff3333 !important;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>013 - Triskaidekaphobia</h1>
+            <div class="info">October 26, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="skipCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Animation</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Building Floors</label>
+                    <input type="range" id="floorsSlider" min="10" max="50" value="25" step="1">
+                    <div class="value-display" id="floorsValue">25</div>
+                </div>
+                <div class="slider-group">
+                    <label>Animation Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Skip Pattern</label>
+                    <input type="range" id="patternSlider" min="1" max="3" value="1" step="1">
+                    <div class="value-display" id="patternValue">13 Only</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Depth</label>
+                    <input type="range" id="depthSlider" min="1" max="5" value="3" step="1">
+                    <div class="value-display" id="depthValue">3</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Triskaidekaphobia: Fear of <span class="thirteen">13</span></h2>
+            <p>
+                Triskaidekaphobia is the fear of the number <span class="thirteen">13</span>. This superstition
+                is so widespread that many buildings skip the <span class="thirteen">13</span>th floor, going
+                directly from 12 to 14. Airlines often skip row <span class="thirteen">13</span>, and some
+                cities don't have a <span class="thirteen">13</span>th Street or Avenue.
+            </p>
+            <p>
+                This fractal visualization shows the recursive pattern of skipping unlucky numbers throughout
+                different scales. Watch as buildings eliminate floor <span class="thirteen">13</span>, creating
+                gaps that propagate through the fractal structure. The pattern repeats at smaller scales,
+                showing how superstition creates mathematical voids in our numbering systems.
+            </p>
+            <p>
+                The fractal demonstrates how skipping numbers creates a self-similar pattern across different
+                levels of recursion. Each building contains smaller buildings, each skipping their own
+                <span class="thirteen">13</span>th floor, creating a cascade of missing numbers. You can
+                also explore patterns that skip all numbers containing <span class="thirteen">13</span>,
+                or multiples of <span class="thirteen">13</span>.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class Triskaidekaphobia {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.floors = 25;
+                this.speed = 5;
+                this.pattern = 1; // 1 = skip 13, 2 = skip all with 13, 3 = skip multiples of 13
+                this.depth = 3;
+                this.isAnimating = false;
+                this.time = 0;
+
+                // Buildings
+                this.buildings = [];
+                this.initBuildings();
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('floorsSlider').addEventListener('input', (e) => {
+                    this.floors = parseInt(e.target.value);
+                    document.getElementById('floorsValue').textContent = this.floors;
+                    this.initBuildings();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('patternSlider').addEventListener('input', (e) => {
+                    this.pattern = parseInt(e.target.value);
+                    const labels = ['13 Only', 'Contains 13', 'Multiples of 13'];
+                    document.getElementById('patternValue').textContent = labels[this.pattern - 1];
+                    this.initBuildings();
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('depthSlider').addEventListener('input', (e) => {
+                    this.depth = parseInt(e.target.value);
+                    document.getElementById('depthValue').textContent = this.depth;
+                    this.initBuildings();
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            shouldSkip(num) {
+                switch(this.pattern) {
+                    case 1: // Skip 13 only
+                        return num === 13;
+                    case 2: // Skip numbers containing 13
+                        return num.toString().includes('13');
+                    case 3: // Skip multiples of 13
+                        return num % 13 === 0;
+                    default:
+                        return num === 13;
+                }
+            }
+
+            initBuildings() {
+                this.buildings = [];
+                const buildingCount = 5;
+
+                for (let i = 0; i < buildingCount; i++) {
+                    this.buildings.push({
+                        x: 100 + i * 220,
+                        y: this.canvas.height - 50,
+                        width: 180,
+                        floors: this.floors,
+                        offset: i * 20
+                    });
+                }
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Animation';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Animation';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            drawBuilding(x, y, width, floors, depth, offset) {
+                if (depth <= 0) return;
+
+                const floorHeight = 15;
+                let currentY = y;
+                let displayFloor = 1;
+
+                for (let floor = 1; floor <= floors; floor++) {
+                    // Check if this floor should be skipped
+                    if (this.shouldSkip(floor)) {
+                        // Draw void/gap for skipped floor
+                        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                        this.ctx.fillRect(x, currentY - floorHeight, width, floorHeight);
+
+                        // Draw X through skipped floor
+                        this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                        this.ctx.lineWidth = 2;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, currentY - floorHeight);
+                        this.ctx.lineTo(x + width, currentY);
+                        this.ctx.moveTo(x + width, currentY - floorHeight);
+                        this.ctx.lineTo(x, currentY);
+                        this.ctx.stroke();
+
+                        currentY -= floorHeight;
+                        continue;
+                    }
+
+                    // Draw normal floor
+                    this.ctx.fillStyle = `rgba(100, 100, 100, ${0.3 + depth * 0.2})`;
+                    this.ctx.fillRect(x, currentY - floorHeight, width, floorHeight);
+
+                    // Floor outline
+                    this.ctx.strokeStyle = `rgba(150, 150, 150, ${0.5 + depth * 0.2})`;
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(x, currentY - floorHeight, width, floorHeight);
+
+                    // Floor number
+                    this.ctx.fillStyle = `rgba(200, 200, 200, ${0.6 + depth * 0.2})`;
+                    this.ctx.font = '10px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(displayFloor.toString(), x + width / 2, currentY - floorHeight / 2 + 3);
+
+                    // Windows (animate on/off)
+                    const windowsOn = (this.time + offset + floor) % 60 < 30;
+                    if (windowsOn) {
+                        this.ctx.fillStyle = `rgba(255, 255, 200, ${0.4 + depth * 0.2})`;
+                        const windowCount = 4;
+                        const windowWidth = width / (windowCount + 1);
+                        for (let w = 0; w < windowCount; w++) {
+                            this.ctx.fillRect(
+                                x + windowWidth / 2 + w * windowWidth,
+                                currentY - floorHeight + 4,
+                                windowWidth / 2,
+                                floorHeight - 8
+                            );
+                        }
+                    }
+
+                    // Recursive smaller buildings inside (fractal)
+                    if (depth > 1 && floor % 5 === 0 && !this.shouldSkip(floor)) {
+                        const miniWidth = width * 0.25;
+                        const miniX = x + width * 0.05;
+                        this.drawBuilding(
+                            miniX,
+                            currentY - floorHeight / 2,
+                            miniWidth,
+                            Math.floor(floors / 2),
+                            depth - 1,
+                            offset + floor
+                        );
+                    }
+
+                    currentY -= floorHeight;
+                    displayFloor++;
+                }
+
+                // Building outline
+                this.ctx.strokeStyle = `rgba(180, 180, 180, ${0.6 + depth * 0.3})`;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(x, y - floors * floorHeight, width, floors * floorHeight);
+            }
+
+            draw() {
+                // Background
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#0a0a0a');
+                gradient.addColorStop(1, '#1a1a1a');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Ground
+                this.ctx.fillStyle = '#2a2a2a';
+                this.ctx.fillRect(0, this.canvas.height - 50, this.canvas.width, 50);
+
+                // Draw buildings
+                this.buildings.forEach(building => {
+                    this.drawBuilding(
+                        building.x,
+                        building.y,
+                        building.width,
+                        building.floors,
+                        this.depth,
+                        building.offset
+                    );
+                });
+
+                // Title
+                this.ctx.fillStyle = 'rgba(150, 150, 150, 0.3)';
+                this.ctx.font = 'bold 48px monospace';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('SKIP 13', this.canvas.width / 2, 60);
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time += this.speed * 0.5;
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.time = 0;
+                this.initBuildings();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('skipCanvas');
+            new Triskaidekaphobia(canvas);
+        });
+    </script>
+</body>
+</html>
