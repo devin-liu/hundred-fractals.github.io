@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>014 - Yangtze River | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #4a90a4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #6bb6c9;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(74, 144, 164, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4a90a4 0%, #2d5a6b 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 164, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #6bb6c9 0%, #4a90a4 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(74, 144, 164, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(74, 144, 164, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #6bb6c9;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #4a90a4;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #8dcde0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .time-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fbbf24;
+            font-family: monospace;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(74, 144, 164, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(74, 144, 164, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #6bb6c9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>014 - Yangtze River (长江)</h1>
+            <div class="info">October 29, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="riverCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Flow</button>
+            <button id="resetBtn">Reset</button>
+            <div class="time-display" id="timeDisplay">06:00</div>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Flow Speed</label>
+                    <input type="range" id="flowSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="flowValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Time Speed</label>
+                    <input type="range" id="timeSlider" min="1" max="20" value="10" step="1">
+                    <div class="value-display" id="timeValue">10</div>
+                </div>
+                <div class="slider-group">
+                    <label>Wave Detail</label>
+                    <input type="range" id="detailSlider" min="2" max="6" value="4" step="1">
+                    <div class="value-display" id="detailValue">4</div>
+                </div>
+                <div class="slider-group">
+                    <label>Boat Count</label>
+                    <input type="range" id="boatSlider" min="0" max="20" value="8" step="1">
+                    <div class="value-display" id="boatValue">8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Yangtze River: China's Mighty Waterway</h2>
+            <p>
+                The Yangtze River (长江, Cháng Jiāng) is the longest river in Asia and the third-longest
+                in the world at 6,300 kilometers (3,917 miles). It flows from the glaciers of the
+                Tibetan Plateau through central China to the East China Sea near Shanghai. The river
+                is vital to Chinese civilization, supporting over 400 million people.
+            </p>
+            <p>
+                This fractal visualization traces the Yangtze's winding path through China. Watch as
+                the river flows continuously eastward, with fractal water patterns creating realistic
+                turbulence and eddies. The day/night cycle progresses rapidly, showing the river under
+                dawn light, bright noon sun, golden sunset, and moonlit night.
+            </p>
+            <p>
+                The fractal nature emerges from the recursive branching of tributaries, the self-similar
+                patterns of water turbulence at different scales, and the meandering curves that repeat
+                throughout the river's course. Boats travel along the river, appearing as small lights
+                at night. Adjust flow speed, time progression, wave detail, and boat traffic.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class YangtzeRiver {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.flowSpeed = 5;
+                this.timeSpeed = 10;
+                this.waveDetail = 4;
+                this.boatCount = 8;
+                this.isAnimating = false;
+                this.time = 0;
+                this.timeOfDay = 6; // 0-24 hours
+
+                // River path (Yangtze approximate shape from west to east)
+                this.riverPath = this.createRiverPath();
+                this.boats = [];
+                this.initBoats();
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('flowSlider').addEventListener('input', (e) => {
+                    this.flowSpeed = parseInt(e.target.value);
+                    document.getElementById('flowValue').textContent = this.flowSpeed;
+                });
+
+                document.getElementById('timeSlider').addEventListener('input', (e) => {
+                    this.timeSpeed = parseInt(e.target.value);
+                    document.getElementById('timeValue').textContent = this.timeSpeed;
+                });
+
+                document.getElementById('detailSlider').addEventListener('input', (e) => {
+                    this.waveDetail = parseInt(e.target.value);
+                    document.getElementById('detailValue').textContent = this.waveDetail;
+                });
+
+                document.getElementById('boatSlider').addEventListener('input', (e) => {
+                    this.boatCount = parseInt(e.target.value);
+                    document.getElementById('boatValue').textContent = this.boatCount;
+                    this.initBoats();
+                    if (!this.isAnimating) this.draw();
+                });
+            }
+
+            createRiverPath() {
+                // Simplified Yangtze path from west (Tibet) to east (Shanghai)
+                const points = [
+                    { x: 50, y: 200 },    // Source in Tibet
+                    { x: 150, y: 250 },   // Upper reaches
+                    { x: 280, y: 220 },   // Through gorges
+                    { x: 400, y: 280 },   // Three Gorges area
+                    { x: 550, y: 320 },   // Middle reaches
+                    { x: 700, y: 340 },   // Wuhan area
+                    { x: 850, y: 360 },   // Nanjing area
+                    { x: 1000, y: 380 },  // Shanghai delta
+                    { x: 1150, y: 400 }   // East China Sea
+                ];
+
+                return points;
+            }
+
+            initBoats() {
+                this.boats = [];
+                for (let i = 0; i < this.boatCount; i++) {
+                    this.boats.push({
+                        progress: Math.random(),
+                        speed: 0.0002 + Math.random() * 0.0003,
+                        size: 3 + Math.random() * 4
+                    });
+                }
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Flow';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Flow';
+                    btn.classList.remove('active');
+                    this.draw();
+                }
+            }
+
+            getSkyColor() {
+                const hour = this.timeOfDay % 24;
+
+                if (hour >= 5 && hour < 7) {
+                    // Dawn
+                    const t = (hour - 5) / 2;
+                    return this.interpolateColors(
+                        { r: 25, g: 25, b: 50 },
+                        { r: 255, g: 180, b: 120 },
+                        t
+                    );
+                } else if (hour >= 7 && hour < 17) {
+                    // Day
+                    return { r: 135, g: 206, b: 235 };
+                } else if (hour >= 17 && hour < 19) {
+                    // Sunset
+                    const t = (hour - 17) / 2;
+                    return this.interpolateColors(
+                        { r: 255, g: 150, b: 100 },
+                        { r: 30, g: 30, b: 60 },
+                        t
+                    );
+                } else {
+                    // Night
+                    return { r: 15, g: 15, b: 35 };
+                }
+            }
+
+            interpolateColors(c1, c2, t) {
+                return {
+                    r: Math.floor(c1.r + (c2.r - c1.r) * t),
+                    g: Math.floor(c1.g + (c2.g - c1.g) * t),
+                    b: Math.floor(c1.b + (c2.b - c1.b) * t)
+                };
+            }
+
+            getWaterColor() {
+                const hour = this.timeOfDay % 24;
+                const isNight = hour < 6 || hour >= 19;
+
+                if (isNight) {
+                    return { r: 20, g: 30, b: 50 };
+                } else if (hour >= 17 && hour < 19) {
+                    // Sunset - golden water
+                    return { r: 100, g: 120, b: 140 };
+                } else {
+                    // Day - blue water
+                    return { r: 74, g: 144, b: 164 };
+                }
+            }
+
+            // Perlin noise for water texture
+            noise(x, y) {
+                const X = Math.floor(x) & 255;
+                const Y = Math.floor(y) & 255;
+
+                x -= Math.floor(x);
+                y -= Math.floor(y);
+
+                const u = this.fade(x);
+                const v = this.fade(y);
+
+                const n00 = this.grad(X, Y, x, y);
+                const n01 = this.grad(X, Y + 1, x, y - 1);
+                const n10 = this.grad(X + 1, Y, x - 1, y);
+                const n11 = this.grad(X + 1, Y + 1, x - 1, y - 1);
+
+                const nx0 = this.lerp(n00, n10, u);
+                const nx1 = this.lerp(n01, n11, u);
+
+                return this.lerp(nx0, nx1, v);
+            }
+
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            lerp(a, b, t) {
+                return a + t * (b - a);
+            }
+
+            grad(x, y, dx, dy) {
+                const hash = (x * 374761393 + y * 668265263) & 0xFFFFFFFF;
+                const h = hash & 3;
+                return (h === 0 ? dx + dy : h === 1 ? -dx + dy : h === 2 ? dx - dy : -dx - dy);
+            }
+
+            fractalNoise(x, y, octaves) {
+                let value = 0;
+                let amplitude = 1;
+                let frequency = 1;
+                let maxValue = 0;
+
+                for (let i = 0; i < octaves; i++) {
+                    value += this.noise(x * frequency, y * frequency) * amplitude;
+                    maxValue += amplitude;
+                    amplitude *= 0.5;
+                    frequency *= 2;
+                }
+
+                return value / maxValue;
+            }
+
+            drawSky() {
+                const skyColor = this.getSkyColor();
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+
+                gradient.addColorStop(0, `rgb(${skyColor.r}, ${skyColor.g}, ${skyColor.b})`);
+                gradient.addColorStop(1, `rgb(${Math.floor(skyColor.r * 0.7)}, ${Math.floor(skyColor.g * 0.7)}, ${Math.floor(skyColor.b * 0.7)})`);
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            drawLand() {
+                const hour = this.timeOfDay % 24;
+                const isNight = hour < 6 || hour >= 19;
+
+                this.ctx.fillStyle = isNight ? '#1a2a1a' : '#4a6a4a';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            drawRiver() {
+                const waterColor = this.getWaterColor();
+
+                // Draw river with varying width
+                this.ctx.save();
+
+                for (let i = 0; i < this.riverPath.length - 1; i++) {
+                    const p1 = this.riverPath[i];
+                    const p2 = this.riverPath[i + 1];
+
+                    // River width varies along length
+                    const width1 = 30 + i * 8;
+                    const width2 = 30 + (i + 1) * 8;
+
+                    // Draw river segment with gradient
+                    const gradient = this.ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                    gradient.addColorStop(0, `rgb(${waterColor.r}, ${waterColor.g}, ${waterColor.b})`);
+                    gradient.addColorStop(1, `rgb(${waterColor.r + 20}, ${waterColor.g + 20}, ${waterColor.b + 20})`);
+
+                    this.ctx.strokeStyle = gradient;
+                    this.ctx.lineWidth = (width1 + width2) / 2;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.stroke();
+                }
+
+                this.ctx.restore();
+            }
+
+            drawWaterFlow() {
+                // Draw flowing water texture
+                const waterColor = this.getWaterColor();
+                const resolution = 8;
+
+                for (let i = 0; i < this.riverPath.length - 1; i++) {
+                    const p1 = this.riverPath[i];
+                    const p2 = this.riverPath[i + 1];
+                    const width = 30 + i * 8;
+
+                    // Sample points along segment
+                    for (let t = 0; t < 1; t += 0.1) {
+                        const x = p1.x + (p2.x - p1.x) * t;
+                        const y = p1.y + (p2.y - p1.y) * t;
+
+                        // Add flowing texture with noise
+                        for (let offset = -width / 2; offset < width / 2; offset += resolution) {
+                            const perpX = -(p2.y - p1.y);
+                            const perpY = (p2.x - p1.x);
+                            const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
+
+                            const px = x + (perpX / perpLen) * offset;
+                            const py = y + (perpY / perpLen) * offset;
+
+                            const flowOffset = this.time * this.flowSpeed * 0.01;
+                            const noise = this.fractalNoise(
+                                px * 0.01 + flowOffset,
+                                py * 0.01,
+                                this.waveDetail
+                            );
+
+                            const brightness = 0.8 + noise * 0.4;
+                            this.ctx.fillStyle = `rgba(${waterColor.r * brightness}, ${waterColor.g * brightness}, ${waterColor.b * brightness}, 0.3)`;
+                            this.ctx.fillRect(px, py, resolution, resolution);
+                        }
+                    }
+                }
+            }
+
+            getPointOnPath(progress) {
+                const totalSegments = this.riverPath.length - 1;
+                const segment = Math.floor(progress * totalSegments);
+                const segmentProgress = (progress * totalSegments) - segment;
+
+                if (segment >= totalSegments) {
+                    return this.riverPath[this.riverPath.length - 1];
+                }
+
+                const p1 = this.riverPath[segment];
+                const p2 = this.riverPath[segment + 1];
+
+                return {
+                    x: p1.x + (p2.x - p1.x) * segmentProgress,
+                    y: p1.y + (p2.y - p1.y) * segmentProgress
+                };
+            }
+
+            drawBoats() {
+                const hour = this.timeOfDay % 24;
+                const isNight = hour < 6 || hour >= 19;
+
+                this.boats.forEach(boat => {
+                    boat.progress += boat.speed * this.flowSpeed;
+                    if (boat.progress > 1) boat.progress = 0;
+
+                    const pos = this.getPointOnPath(boat.progress);
+
+                    this.ctx.save();
+
+                    if (isNight) {
+                        // Boat lights at night
+                        this.ctx.fillStyle = 'rgba(255, 220, 150, 0.8)';
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.shadowColor = 'rgba(255, 220, 150, 0.5)';
+                    } else {
+                        // Boat silhouette during day
+                        this.ctx.fillStyle = 'rgba(100, 80, 60, 0.8)';
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, boat.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    this.ctx.restore();
+                });
+            }
+
+            updateTimeDisplay() {
+                const hour = Math.floor(this.timeOfDay) % 24;
+                const minute = Math.floor((this.timeOfDay % 1) * 60);
+
+                document.getElementById('timeDisplay').textContent =
+                    `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            }
+
+            draw() {
+                this.drawSky();
+                this.drawLand();
+                this.drawRiver();
+                this.drawWaterFlow();
+                this.drawBoats();
+                this.updateTimeDisplay();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time++;
+                this.timeOfDay += this.timeSpeed * 0.001;
+
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.time = 0;
+                this.timeOfDay = 6;
+                this.initBoats();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('riverCanvas');
+            new YangtzeRiver(canvas);
+        });
+    </script>
+</body>
+</html>
