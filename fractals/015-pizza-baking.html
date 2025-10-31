@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>015 - Pizza Baking | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #2a1810 0%, #4a2f1f 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #ff8c42;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ffa666;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 140, 66, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(255, 100, 0, 0.3);
+            background: #1a1a1a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 140, 66, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ff3333 0%, #cc0000 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 140, 66, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 140, 66, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #ff8c42;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #ff8c42;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ffa666;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .temp-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff3333;
+            font-family: monospace;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 140, 66, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 140, 66, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #ff8c42;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>015 - Pizza Baking</h1>
+            <div class="info">October 30, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="pizzaCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="bakeBtn">Start Baking</button>
+            <button id="resetBtn">New Pizza</button>
+            <div class="temp-display" id="tempDisplay">75°F</div>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Oven Temp (°F)</label>
+                    <input type="range" id="tempSlider" min="200" max="900" value="500" step="25">
+                    <div class="value-display" id="tempValue">500</div>
+                </div>
+                <div class="slider-group">
+                    <label>Bake Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Toppings</label>
+                    <input type="range" id="toppingsSlider" min="10" max="80" value="40" step="5">
+                    <div class="value-display" id="toppingsValue">40</div>
+                </div>
+                <div class="slider-group">
+                    <label>Heat Waves</label>
+                    <input type="range" id="heatSlider" min="0" max="10" value="6" step="1">
+                    <div class="value-display" id="heatValue">6</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Pizza Baking: The Maillard Reaction</h2>
+            <p>
+                Pizza baking is a complex chemical process involving the Maillard reaction, where amino
+                acids and reducing sugars react at high temperatures (typically 450-500°F in a pizza oven)
+                to create the golden-brown crust and delicious flavors. As the pizza bakes, the dough
+                transitions from pale white to golden brown, cheese melts and bubbles, and toppings
+                caramelize.
+            </p>
+            <p>
+                This fractal visualization shows a pizza baking in real-time. Watch as the crust gradually
+                browns from the edges inward, cheese melts and forms bubbles, pepperoni curls and crisps,
+                and vegetables release moisture and char. Heat waves shimmer above the pizza, and the
+                oven temperature creates a radiant glow.
+            </p>
+            <p>
+                The fractal nature emerges from the recursive patterns of cheese bubbles at different
+                scales, the self-similar browning patterns in the crust, and the chaotic distribution
+                of toppings. Adjust oven temperature (higher = faster baking), bake speed, number of
+                toppings, and heat wave intensity. Watch for the perfect golden-brown color!
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class PizzaBaking {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1000;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.targetTemp = 500;
+                this.currentTemp = 75;
+                this.bakeSpeed = 5;
+                this.toppingCount = 40;
+                this.heatIntensity = 6;
+                this.isBaking = false;
+                this.bakeTime = 0;
+
+                // Pizza properties
+                this.pizzaX = this.canvas.width / 2;
+                this.pizzaY = this.canvas.height / 2 + 50;
+                this.pizzaRadius = 180;
+
+                // Toppings
+                this.toppings = [];
+                this.cheeseBubbles = [];
+                this.heatWaves = [];
+
+                this.initPizza();
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('bakeBtn').addEventListener('click', () => {
+                    this.toggleBaking();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('tempSlider').addEventListener('input', (e) => {
+                    this.targetTemp = parseInt(e.target.value);
+                    document.getElementById('tempValue').textContent = this.targetTemp;
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.bakeSpeed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.bakeSpeed;
+                });
+
+                document.getElementById('toppingsSlider').addEventListener('input', (e) => {
+                    this.toppingCount = parseInt(e.target.value);
+                    document.getElementById('toppingsValue').textContent = this.toppingCount;
+                    this.initPizza();
+                    if (!this.isBaking) this.draw();
+                });
+
+                document.getElementById('heatSlider').addEventListener('input', (e) => {
+                    this.heatIntensity = parseInt(e.target.value);
+                    document.getElementById('heatValue').textContent = this.heatIntensity;
+                });
+            }
+
+            initPizza() {
+                this.toppings = [];
+                this.cheeseBubbles = [];
+                this.bakeTime = 0;
+
+                // Generate toppings (pepperoni, mushrooms, peppers)
+                for (let i = 0; i < this.toppingCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * (this.pizzaRadius - 30);
+                    const type = Math.random();
+
+                    this.toppings.push({
+                        x: this.pizzaX + Math.cos(angle) * distance,
+                        y: this.pizzaY + Math.sin(angle) * distance,
+                        type: type < 0.5 ? 'pepperoni' : type < 0.75 ? 'pepper' : 'mushroom',
+                        size: 12 + Math.random() * 8,
+                        cookProgress: 0
+                    });
+                }
+
+                // Generate cheese bubbles
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * (this.pizzaRadius - 20);
+
+                    this.cheeseBubbles.push({
+                        x: this.pizzaX + Math.cos(angle) * distance,
+                        y: this.pizzaY + Math.sin(angle) * distance,
+                        size: 5 + Math.random() * 15,
+                        progress: 0
+                    });
+                }
+            }
+
+            toggleBaking() {
+                this.isBaking = !this.isBaking;
+                const btn = document.getElementById('bakeBtn');
+
+                if (this.isBaking) {
+                    btn.textContent = 'Stop Baking';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Baking';
+                    btn.classList.remove('active');
+                }
+            }
+
+            updateTemperature() {
+                if (this.isBaking) {
+                    // Heat up oven
+                    if (this.currentTemp < this.targetTemp) {
+                        this.currentTemp += 5;
+                    }
+                } else {
+                    // Cool down
+                    if (this.currentTemp > 75) {
+                        this.currentTemp -= 2;
+                    }
+                }
+
+                document.getElementById('tempDisplay').textContent =
+                    `${Math.floor(this.currentTemp)}°F`;
+            }
+
+            getCrustColor(cookLevel) {
+                // Transition from raw dough to golden brown to burnt
+                if (cookLevel < 0.3) {
+                    // Raw to lightly cooked
+                    const t = cookLevel / 0.3;
+                    return {
+                        r: 240 - t * 50,
+                        g: 230 - t * 50,
+                        b: 200 - t * 80
+                    };
+                } else if (cookLevel < 0.7) {
+                    // Golden brown
+                    const t = (cookLevel - 0.3) / 0.4;
+                    return {
+                        r: 190 + t * 30,
+                        g: 180 - t * 50,
+                        b: 120 - t * 40
+                    };
+                } else {
+                    // Browning to burnt
+                    const t = (cookLevel - 0.7) / 0.3;
+                    return {
+                        r: 220 - t * 100,
+                        g: 130 - t * 80,
+                        b: 80 - t * 60
+                    };
+                }
+            }
+
+            getCheeseColor(meltLevel) {
+                // Cheese melts and browns
+                if (meltLevel < 0.4) {
+                    // White to yellow
+                    const t = meltLevel / 0.4;
+                    return {
+                        r: 255,
+                        g: 250 - t * 30,
+                        b: 200 - t * 80
+                    };
+                } else {
+                    // Yellow to brown
+                    const t = (meltLevel - 0.4) / 0.6;
+                    return {
+                        r: 255 - t * 55,
+                        g: 220 - t * 90,
+                        b: 120 - t * 40
+                    };
+                }
+            }
+
+            getToppingColor(topping) {
+                const cook = topping.cookProgress;
+
+                if (topping.type === 'pepperoni') {
+                    // Red to dark red/brown
+                    const r = 200 - cook * 80;
+                    const g = 50 - cook * 30;
+                    const b = 40 - cook * 20;
+                    return { r, g, b };
+                } else if (topping.type === 'pepper') {
+                    // Green to charred
+                    const r = 100 + cook * 80;
+                    const g = 180 - cook * 100;
+                    const b = 50 - cook * 30;
+                    return { r, g, b };
+                } else {
+                    // Mushroom: tan to brown
+                    const r = 200 - cook * 80;
+                    const g = 180 - cook * 80;
+                    const b = 150 - cook * 90;
+                    return { r, g, b };
+                }
+            }
+
+            drawOven() {
+                // Oven interior
+                const ovenGlow = Math.min(1, this.currentTemp / this.targetTemp);
+
+                this.ctx.fillStyle = '#0a0a0a';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Oven glow
+                if (this.currentTemp > 200) {
+                    const gradient = this.ctx.createRadialGradient(
+                        this.pizzaX, this.pizzaY, 50,
+                        this.pizzaX, this.pizzaY, 400
+                    );
+                    gradient.addColorStop(0, `rgba(255, 100, 0, ${ovenGlow * 0.1})`);
+                    gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                // Oven rack
+                this.ctx.strokeStyle = '#666';
+                this.ctx.lineWidth = 3;
+                for (let i = 0; i < 20; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i * 60, this.pizzaY + this.pizzaRadius + 20);
+                    this.ctx.lineTo(i * 60, this.pizzaY + this.pizzaRadius + 40);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawPizza() {
+                const cookLevel = Math.min(1, this.bakeTime / 500);
+
+                this.ctx.save();
+
+                // Crust
+                const crustColor = this.getCrustColor(cookLevel);
+                this.ctx.fillStyle = `rgb(${crustColor.r}, ${crustColor.g}, ${crustColor.b})`;
+                this.ctx.beginPath();
+                this.ctx.arc(this.pizzaX, this.pizzaY, this.pizzaRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Crust edge (darker)
+                this.ctx.strokeStyle = `rgb(${crustColor.r * 0.7}, ${crustColor.g * 0.7}, ${crustColor.b * 0.7})`;
+                this.ctx.lineWidth = 15;
+                this.ctx.stroke();
+
+                // Sauce (inner circle)
+                this.ctx.fillStyle = `rgb(180, 40, 30)`;
+                this.ctx.beginPath();
+                this.ctx.arc(this.pizzaX, this.pizzaY, this.pizzaRadius - 15, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Cheese with bubbles
+                const cheeseColor = this.getCheeseColor(cookLevel);
+                this.ctx.fillStyle = `rgb(${cheeseColor.r}, ${cheeseColor.g}, ${cheeseColor.b})`;
+                this.ctx.beginPath();
+                this.ctx.arc(this.pizzaX, this.pizzaY, this.pizzaRadius - 20, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Cheese bubbles
+                this.cheeseBubbles.forEach(bubble => {
+                    if (cookLevel > 0.3) {
+                        bubble.progress = Math.min(1, bubble.progress + 0.01);
+                        const bubbleSize = bubble.size * bubble.progress;
+
+                        this.ctx.fillStyle = `rgba(${cheeseColor.r + 20}, ${cheeseColor.g + 20}, ${cheeseColor.b + 20}, 0.6)`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(bubble.x, bubble.y, bubbleSize, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                });
+
+                // Toppings
+                this.toppings.forEach(topping => {
+                    // Cook toppings faster at edges
+                    const distFromCenter = Math.sqrt(
+                        Math.pow(topping.x - this.pizzaX, 2) +
+                        Math.pow(topping.y - this.pizzaY, 2)
+                    );
+                    const edgeFactor = distFromCenter / this.pizzaRadius;
+                    topping.cookProgress = Math.min(1, cookLevel * (0.8 + edgeFactor * 0.4));
+
+                    const color = this.getToppingColor(topping);
+                    this.ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(topping.x, topping.y, topping.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Pepperoni grease/curl effect
+                    if (topping.type === 'pepperoni' && topping.cookProgress > 0.4) {
+                        this.ctx.fillStyle = 'rgba(255, 100, 0, 0.3)';
+                        this.ctx.beginPath();
+                        this.ctx.arc(topping.x, topping.y, topping.size * 0.6, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                });
+
+                this.ctx.restore();
+            }
+
+            drawHeatWaves() {
+                this.heatWaves = this.heatWaves.filter(wave => {
+                    wave.y -= wave.vy;
+                    wave.x += wave.vx;
+                    wave.life -= 0.02;
+                    wave.size *= 0.98;
+
+                    if (wave.life > 0) {
+                        this.ctx.save();
+
+                        const gradient = this.ctx.createRadialGradient(
+                            wave.x, wave.y, 0,
+                            wave.x, wave.y, wave.size
+                        );
+                        gradient.addColorStop(0, `rgba(255, 150, 50, ${wave.life * 0.2})`);
+                        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.beginPath();
+                        this.ctx.arc(wave.x, wave.y, wave.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                        this.ctx.restore();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            draw() {
+                this.drawOven();
+                this.drawHeatWaves();
+                this.drawPizza();
+            }
+
+            animate() {
+                if (!this.isBaking && this.currentTemp <= 75) return;
+
+                this.updateTemperature();
+
+                if (this.isBaking && this.currentTemp > 300) {
+                    this.bakeTime += this.bakeSpeed;
+
+                    // Generate heat waves
+                    if (Math.random() < this.heatIntensity * 0.05) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * this.pizzaRadius;
+
+                        this.heatWaves.push({
+                            x: this.pizzaX + Math.cos(angle) * distance,
+                            y: this.pizzaY + Math.sin(angle) * distance,
+                            vx: (Math.random() - 0.5) * 0.5,
+                            vy: 1 + Math.random() * 2,
+                            life: 1,
+                            size: 10 + Math.random() * 20
+                        });
+                    }
+                }
+
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.bakeTime = 0;
+                this.isBaking = false;
+                this.currentTemp = 75;
+                this.heatWaves = [];
+
+                const btn = document.getElementById('bakeBtn');
+                btn.textContent = 'Start Baking';
+                btn.classList.remove('active');
+
+                this.initPizza();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('pizzaCanvas');
+            new PizzaBaking(canvas);
+        });
+    </script>
+</body>
+</html>
