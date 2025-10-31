@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>016 - Pangaea | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a3a52 0%, #0a1a2a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #6b8e9e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #8faabb;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(107, 142, 158, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #0a1a2a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6b8e9e 0%, #4a6a7a 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 142, 158, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #8faabb 0%, #6b8e9e 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(107, 142, 158, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(107, 142, 158, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #8faabb;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #6b8e9e;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #a3c4d4;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .year-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6b8e9e;
+            font-family: monospace;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(107, 142, 158, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(107, 142, 158, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #8faabb;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>016 - Pangaea</h1>
+            <div class="info">October 31, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="pangaeaCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Drift</button>
+            <button id="reverseBtn">Reverse</button>
+            <button id="resetBtn">Reset to Pangaea</button>
+            <div class="year-display" id="yearDisplay">200 MYA</div>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Drift Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Detail</label>
+                    <input type="range" id="detailSlider" min="1" max="5" value="3" step="1">
+                    <div class="value-display" id="detailValue">3</div>
+                </div>
+                <div class="slider-group">
+                    <label>Ocean Currents</label>
+                    <input type="range" id="currentSlider" min="0" max="10" value="5" step="1">
+                    <div class="value-display" id="currentValue">5</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Pangaea: Continental Drift</h2>
+            <p>
+                Pangaea was a supercontinent that existed approximately 335-175 million years ago.
+                Around 200 million years ago, it began breaking apart due to plate tectonics, eventually
+                forming the seven continents we know today: Africa, Antarctica, Asia, Australia, Europe,
+                North America, and South America.
+            </p>
+            <p>
+                This fractal visualization shows the breakup of Pangaea over 200 million years. Watch
+                as the unified landmass splits into Laurasia (north) and Gondwana (south), then further
+                fragments into modern continents. The continents drift at realistic speeds (about 2-10 cm
+                per year), with the Atlantic Ocean opening, India colliding with Asia, and Australia
+                separating from Antarctica.
+            </p>
+            <p>
+                The fractal nature emerges from the recursive coastline patterns (each zoom reveals more
+                detail), the self-similar rift patterns where continents separate, and the turbulent
+                ocean currents between landmasses. Adjust drift speed, coastline detail, and ocean
+                current visibility. The timeline shows millions of years ago (MYA).
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class Pangaea {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.driftSpeed = 5;
+                this.fractalDetail = 3;
+                this.currentIntensity = 5;
+                this.isAnimating = false;
+                this.driftProgress = 0; // 0 = Pangaea, 1 = modern day
+                this.reverseDirection = false;
+
+                // Continents with initial positions (Pangaea configuration)
+                this.continents = this.createContinents();
+                this.oceanParticles = [];
+                this.initOceanCurrents();
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('reverseBtn').addEventListener('click', () => {
+                    this.reverseDirection = !this.reverseDirection;
+                    if (!this.isAnimating) {
+                        this.isAnimating = true;
+                        const btn = document.getElementById('animateBtn');
+                        btn.textContent = 'Stop Drift';
+                        btn.classList.add('active');
+                        this.animate();
+                    }
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.driftSpeed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.driftSpeed;
+                });
+
+                document.getElementById('detailSlider').addEventListener('input', (e) => {
+                    this.fractalDetail = parseInt(e.target.value);
+                    document.getElementById('detailValue').textContent = this.fractalDetail;
+                    if (!this.isAnimating) this.draw();
+                });
+
+                document.getElementById('currentSlider').addEventListener('input', (e) => {
+                    this.currentIntensity = parseInt(e.target.value);
+                    document.getElementById('currentValue').textContent = this.currentIntensity;
+                });
+            }
+
+            createContinents() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                return [
+                    {
+                        name: 'North America',
+                        // Pangaea position (northwest, touching South America and Africa)
+                        startX: centerX - 80,
+                        startY: centerY - 80,
+                        // Modern position (northwest, moved west)
+                        endX: centerX - 380,
+                        endY: centerY - 150,
+                        rotation: 45,
+                        endRotation: -15,
+                        points: this.generateCoastline(100, 80, 8)
+                    },
+                    {
+                        name: 'South America',
+                        startX: centerX - 70,
+                        startY: centerY + 40,
+                        endX: centerX - 300,
+                        endY: centerY + 80,
+                        rotation: 30,
+                        endRotation: 10,
+                        points: this.generateCoastline(90, 120, 8)
+                    },
+                    {
+                        name: 'Africa',
+                        startX: centerX + 20,
+                        startY: centerY,
+                        endX: centerX + 80,
+                        endY: centerY + 50,
+                        rotation: 0,
+                        endRotation: 5,
+                        points: this.generateCoastline(110, 130, 10)
+                    },
+                    {
+                        name: 'Europe',
+                        startX: centerX + 10,
+                        startY: centerY - 80,
+                        endX: centerX + 180,
+                        endY: centerY - 200,
+                        rotation: -20,
+                        endRotation: -8,
+                        points: this.generateCoastline(80, 60, 7)
+                    },
+                    {
+                        name: 'Asia',
+                        startX: centerX + 80,
+                        startY: centerY - 50,
+                        endX: centerX + 350,
+                        endY: centerY - 120,
+                        rotation: -30,
+                        endRotation: 3,
+                        points: this.generateCoastline(140, 100, 12)
+                    },
+                    {
+                        name: 'Australia',
+                        startX: centerX + 90,
+                        startY: centerY + 80,
+                        endX: centerX + 400,
+                        endY: centerY + 200,
+                        rotation: -45,
+                        endRotation: 12,
+                        points: this.generateCoastline(70, 50, 6)
+                    },
+                    {
+                        name: 'Antarctica',
+                        startX: centerX + 20,
+                        startY: centerY + 120,
+                        endX: centerX + 100,
+                        endY: centerY + 280,
+                        rotation: 0,
+                        endRotation: -5,
+                        points: this.generateCoastline(120, 60, 8)
+                    }
+                ];
+            }
+
+            generateCoastline(width, height, segments) {
+                // Generate fractal coastline
+                const points = [];
+                const angleStep = (Math.PI * 2) / segments;
+
+                for (let i = 0; i < segments; i++) {
+                    const angle = i * angleStep;
+                    const randomness = 0.3 + Math.random() * 0.4;
+                    const x = Math.cos(angle) * width * randomness;
+                    const y = Math.sin(angle) * height * randomness;
+                    points.push({ x, y });
+                }
+
+                return points;
+            }
+
+            initOceanCurrents() {
+                this.oceanParticles = [];
+                for (let i = 0; i < 100; i++) {
+                    this.oceanParticles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        life: Math.random()
+                    });
+                }
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Drift';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Drift';
+                    btn.classList.remove('active');
+                }
+            }
+
+            updateDrift() {
+                const delta = this.driftSpeed * 0.002;
+
+                if (this.reverseDirection) {
+                    this.driftProgress -= delta;
+                    if (this.driftProgress <= 0) {
+                        this.driftProgress = 0;
+                        this.reverseDirection = false;
+                    }
+                } else {
+                    this.driftProgress += delta;
+                    if (this.driftProgress >= 1) {
+                        this.driftProgress = 1;
+                    }
+                }
+
+                // Update year display
+                const yearsAgo = Math.floor(200 - (this.driftProgress * 200));
+                document.getElementById('yearDisplay').textContent =
+                    yearsAgo > 0 ? `${yearsAgo} MYA` : 'Present Day';
+            }
+
+            interpolate(start, end, progress) {
+                return start + (end - start) * progress;
+            }
+
+            drawOcean() {
+                // Ocean background
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#1a4a6a');
+                gradient.addColorStop(1, '#0a2a4a');
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Ocean currents
+                if (this.currentIntensity > 0) {
+                    this.oceanParticles.forEach(particle => {
+                        particle.x += particle.vx * (this.currentIntensity / 10);
+                        particle.y += particle.vy * (this.currentIntensity / 10);
+                        particle.life += 0.01;
+
+                        // Wrap around
+                        if (particle.x < 0) particle.x = this.canvas.width;
+                        if (particle.x > this.canvas.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = this.canvas.height;
+                        if (particle.y > this.canvas.height) particle.y = 0;
+
+                        if (particle.life > 1) particle.life = 0;
+
+                        this.ctx.fillStyle = `rgba(100, 180, 220, ${particle.life * 0.2})`;
+                        this.ctx.fillRect(particle.x, particle.y, 2, 2);
+                    });
+                }
+            }
+
+            drawContinent(continent) {
+                const progress = this.driftProgress;
+
+                // Interpolate position
+                const x = this.interpolate(continent.startX, continent.endX, progress);
+                const y = this.interpolate(continent.startY, continent.endY, progress);
+                const rotation = this.interpolate(continent.rotation, continent.endRotation, progress);
+
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.rotate((rotation * Math.PI) / 180);
+
+                // Draw continent shape
+                this.ctx.fillStyle = '#5a7a5a';
+                this.ctx.strokeStyle = '#4a6a4a';
+                this.ctx.lineWidth = 2;
+
+                this.ctx.beginPath();
+                continent.points.forEach((point, i) => {
+                    // Add fractal detail to coastline
+                    const detailOffset = Math.sin(i * this.fractalDetail + progress * 10) * 3;
+                    const px = point.x + detailOffset;
+                    const py = point.y + detailOffset;
+
+                    if (i === 0) {
+                        this.ctx.moveTo(px, py);
+                    } else {
+                        this.ctx.lineTo(px, py);
+                    }
+                });
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // Add some terrain detail
+                this.ctx.fillStyle = 'rgba(70, 90, 70, 0.5)';
+                for (let i = 0; i < 5; i++) {
+                    const angle = (Math.PI * 2 * i) / 5;
+                    const radius = 10 + Math.random() * 20;
+                    this.ctx.beginPath();
+                    this.ctx.arc(
+                        Math.cos(angle) * 20,
+                        Math.sin(angle) * 20,
+                        radius,
+                        0,
+                        Math.PI * 2
+                    );
+                    this.ctx.fill();
+                }
+
+                // Continent name
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                this.ctx.font = '12px sans-serif';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(continent.name, 0, 5);
+
+                this.ctx.restore();
+            }
+
+            drawRiftLines() {
+                // Draw separation lines as continents drift apart
+                if (this.driftProgress > 0.1) {
+                    this.ctx.strokeStyle = `rgba(255, 100, 0, ${Math.min(0.3, this.driftProgress * 0.5)})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+
+                    // Draw lines between separating continents
+                    for (let i = 0; i < this.continents.length - 1; i++) {
+                        const c1 = this.continents[i];
+                        const c2 = this.continents[i + 1];
+
+                        const x1 = this.interpolate(c1.startX, c1.endX, this.driftProgress);
+                        const y1 = this.interpolate(c1.startY, c1.endY, this.driftProgress);
+                        const x2 = this.interpolate(c2.startX, c2.endX, this.driftProgress);
+                        const y2 = this.interpolate(c2.startY, c2.endY, this.driftProgress);
+
+                        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+                        if (distance > 100 && distance < 400) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x1, y1);
+                            this.ctx.lineTo(x2, y2);
+                            this.ctx.stroke();
+                        }
+                    }
+
+                    this.ctx.setLineDash([]);
+                }
+            }
+
+            draw() {
+                this.drawOcean();
+                this.drawRiftLines();
+
+                // Draw continents
+                this.continents.forEach(continent => {
+                    this.drawContinent(continent);
+                });
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.updateDrift();
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            reset() {
+                this.driftProgress = 0;
+                this.reverseDirection = false;
+                this.isAnimating = false;
+
+                const btn = document.getElementById('animateBtn');
+                btn.textContent = 'Start Drift';
+                btn.classList.remove('active');
+
+                this.initOceanCurrents();
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('pangaeaCanvas');
+            new Pangaea(canvas);
+        });
+    </script>
+</body>
+</html>
