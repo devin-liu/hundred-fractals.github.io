@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>017 - Kinetic Chain | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a5f3e 0%, #0a2f1e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #0a1a0a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #2a7f4f 0%, #1a5f3f 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(42, 127, 79, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #3a9f6f 0%, #2a7f5f 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #2a7f4f;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #3a9f6f;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>017 - Kinetic Chain</h1>
+            <div class="info">November 1, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="kineticCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff4444;"></div>
+                    <span>Ground Force</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff8844;"></div>
+                    <span>Legs</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffcc44;"></div>
+                    <span>Hips/Core</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #44ff44;"></div>
+                    <span>Torso</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #44ccff;"></div>
+                    <span>Shoulder</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4444ff;"></div>
+                    <span>Arm</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #cc44ff;"></div>
+                    <span>Racket</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="animateBtn">Start Forehand</button>
+            <button id="resetBtn">Reset</button>
+            <button id="slowMoBtn">Slow Motion</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Swing Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Energy Flow</label>
+                    <input type="range" id="energySlider" min="1" max="10" value="7" step="1">
+                    <div class="value-display" id="energyValue">7</div>
+                </div>
+                <div class="slider-group">
+                    <label>Trail Length</label>
+                    <input type="range" id="trailSlider" min="10" max="100" value="50" step="10">
+                    <div class="value-display" id="trailValue">50</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Kinetic Chain: Tennis Forehand</h2>
+            <p>
+                The kinetic chain in tennis refers to the sequential activation of body segments to generate
+                maximum power and efficiency. Energy flows from the ground up through the legs, hips, torso,
+                shoulder, arm, and finally into the racket, with each segment accelerating and then
+                decelerating to transfer energy to the next link in the chain.
+            </p>
+            <p>
+                In a proper forehand, the sequence begins with the legs pushing off the ground, generating
+                force that travels upward. The hips rotate, followed by the torso, creating a coiling effect.
+                The shoulder then rotates forward, the arm extends, and finally the racket accelerates through
+                the ball. This sequential activation multiplies force at each stage, resulting in racket head
+                speeds exceeding 70-80 mph in professional players.
+            </p>
+            <p>
+                This fractal visualization shows the energy transfer through color-coded body segments. Watch
+                how each segment activates in sequence, with energy particles flowing from the ground through
+                each link. The timing and coordination of this chain is critical - breaking the chain by
+                activating segments out of sequence reduces power and increases injury risk.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class KineticChain {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = 1200;
+                this.canvas.height = 700;
+
+                // Parameters
+                this.speed = 5;
+                this.energyIntensity = 7;
+                this.trailLength = 50;
+                this.isAnimating = false;
+                this.time = 0;
+                this.swingPhase = 0; // 0 = ready, 1 = loading, 2 = acceleration, 3 = contact, 4 = follow-through
+
+                // Body parts
+                this.player = this.createPlayer();
+                this.energyParticles = [];
+                this.racketTrail = [];
+                this.ball = null;
+
+                this.setupEventListeners();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('slowMoBtn').addEventListener('click', () => {
+                    this.speed = this.speed === 2 ? 5 : 2;
+                    document.getElementById('speedValue').textContent = this.speed;
+                    document.getElementById('speedSlider').value = this.speed;
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('energySlider').addEventListener('input', (e) => {
+                    this.energyIntensity = parseInt(e.target.value);
+                    document.getElementById('energyValue').textContent = this.energyIntensity;
+                });
+
+                document.getElementById('trailSlider').addEventListener('input', (e) => {
+                    this.trailLength = parseInt(e.target.value);
+                    document.getElementById('trailValue').textContent = this.trailLength;
+                });
+            }
+
+            createPlayer() {
+                const baseX = 500;
+                const baseY = 550;
+
+                return {
+                    // Ground contact points
+                    leftFoot: { x: baseX - 40, y: baseY },
+                    rightFoot: { x: baseX + 40, y: baseY },
+
+                    // Legs
+                    leftKnee: { x: baseX - 35, y: baseY - 80 },
+                    rightKnee: { x: baseX + 35, y: baseY - 80 },
+
+                    // Hips
+                    hips: { x: baseX, y: baseY - 160 },
+
+                    // Torso
+                    shoulders: { x: baseX, y: baseY - 260 },
+
+                    // Head
+                    head: { x: baseX, y: baseY - 310 },
+
+                    // Arms (back arm for balance, hitting arm)
+                    leftShoulder: { x: baseX - 30, y: baseY - 260 },
+                    rightShoulder: { x: baseX + 30, y: baseY - 260 },
+                    leftElbow: { x: baseX - 60, y: baseY - 200 },
+                    rightElbow: { x: baseX + 120, y: baseY - 200 },
+                    leftHand: { x: baseX - 80, y: baseY - 150 },
+                    rightHand: { x: baseX + 180, y: baseY - 180 },
+
+                    // Racket
+                    racketEnd: { x: baseX + 230, y: baseY - 200 },
+
+                    // Rotation angles for animation
+                    hipRotation: 0,
+                    shoulderRotation: 0,
+
+                    // Energy levels for each segment
+                    groundEnergy: 0,
+                    legEnergy: 0,
+                    hipEnergy: 0,
+                    torsoEnergy: 0,
+                    shoulderEnergy: 0,
+                    armEnergy: 0,
+                    racketEnergy: 0
+                };
+            }
+
+            updatePlayerPose() {
+                const baseX = 500;
+                const baseY = 550;
+                const progress = this.time * this.speed * 0.02;
+
+                // Phase transitions
+                if (progress < 1) {
+                    this.swingPhase = 0; // Ready position
+                } else if (progress < 2) {
+                    this.swingPhase = 1; // Loading/coiling
+                } else if (progress < 3.5) {
+                    this.swingPhase = 2; // Acceleration
+                } else if (progress < 4) {
+                    this.swingPhase = 3; // Contact
+                } else if (progress < 6) {
+                    this.swingPhase = 4; // Follow-through
+                } else {
+                    this.isAnimating = false;
+                    const btn = document.getElementById('animateBtn');
+                    btn.textContent = 'Start Forehand';
+                    btn.classList.remove('active');
+                    return;
+                }
+
+                // Update energy levels based on phase
+                const phaseProgress = (progress % 1);
+
+                if (this.swingPhase === 1) {
+                    // Loading: minimal energy, coiling back
+                    this.player.hipRotation = -45 * phaseProgress;
+                    this.player.shoulderRotation = -60 * phaseProgress;
+                    this.player.groundEnergy = 0.3 * phaseProgress;
+                } else if (this.swingPhase === 2) {
+                    // Acceleration: energy flows up the chain
+                    const accelProgress = (progress - 2) / 1.5;
+                    this.player.hipRotation = -45 + 90 * accelProgress;
+                    this.player.shoulderRotation = -60 + 120 * accelProgress;
+
+                    // Sequential energy activation
+                    this.player.groundEnergy = Math.max(0, 1 - accelProgress);
+                    this.player.legEnergy = Math.max(0, Math.min(1, accelProgress * 2));
+                    this.player.hipEnergy = Math.max(0, Math.min(1, (accelProgress - 0.2) * 2.5));
+                    this.player.torsoEnergy = Math.max(0, Math.min(1, (accelProgress - 0.4) * 2.5));
+                    this.player.shoulderEnergy = Math.max(0, Math.min(1, (accelProgress - 0.6) * 3));
+                    this.player.armEnergy = Math.max(0, Math.min(1, (accelProgress - 0.75) * 4));
+                    this.player.racketEnergy = Math.max(0, Math.min(1, (accelProgress - 0.85) * 5));
+                } else if (this.swingPhase === 3) {
+                    // Contact: maximum energy at racket
+                    this.player.hipRotation = 45;
+                    this.player.shoulderRotation = 60;
+                    this.player.racketEnergy = 1;
+                    this.player.armEnergy = 0.8;
+
+                    // Ball contact
+                    if (!this.ball || this.ball.hit) {
+                        this.ball = { x: 700, y: baseY - 250, vx: 15, vy: -8, hit: true };
+                    }
+                } else if (this.swingPhase === 4) {
+                    // Follow-through: energy dissipates
+                    const followProgress = (progress - 4) / 2;
+                    this.player.hipRotation = 45 + 20 * followProgress;
+                    this.player.shoulderRotation = 60 + 40 * followProgress;
+
+                    // Decay all energy
+                    this.player.groundEnergy *= 0.9;
+                    this.player.legEnergy *= 0.9;
+                    this.player.hipEnergy *= 0.9;
+                    this.player.torsoEnergy *= 0.9;
+                    this.player.shoulderEnergy *= 0.9;
+                    this.player.armEnergy *= 0.9;
+                    this.player.racketEnergy *= 0.9;
+                }
+
+                // Update body part positions based on rotation
+                const hipRad = this.player.hipRotation * Math.PI / 180;
+                const shoulderRad = this.player.shoulderRotation * Math.PI / 180;
+
+                // Hips stay relatively centered
+                this.player.hips.x = baseX + Math.sin(hipRad) * 20;
+
+                // Shoulders rotate more
+                this.player.shoulders.x = baseX + Math.sin(shoulderRad) * 40;
+
+                // Right arm (hitting arm) follows shoulder rotation
+                this.player.rightShoulder.x = this.player.shoulders.x + 30;
+                this.player.rightElbow.x = this.player.rightShoulder.x + Math.cos(shoulderRad + 0.5) * 90;
+                this.player.rightElbow.y = baseY - 260 + Math.sin(shoulderRad + 0.5) * 60;
+                this.player.rightHand.x = this.player.rightElbow.x + Math.cos(shoulderRad + 1.2) * 70;
+                this.player.rightHand.y = this.player.rightElbow.y + Math.sin(shoulderRad + 1.2) * 70;
+
+                // Racket extends from hand
+                this.player.racketEnd.x = this.player.rightHand.x + Math.cos(shoulderRad + 1.5) * 80;
+                this.player.racketEnd.y = this.player.rightHand.y + Math.sin(shoulderRad + 1.5) * 80;
+
+                // Left arm for balance
+                this.player.leftShoulder.x = this.player.shoulders.x - 30;
+                this.player.leftElbow.x = this.player.leftShoulder.x - Math.cos(shoulderRad) * 60;
+                this.player.leftElbow.y = baseY - 220;
+                this.player.leftHand.x = this.player.leftElbow.x - Math.cos(shoulderRad) * 40;
+                this.player.leftHand.y = baseY - 180;
+
+                // Generate energy particles
+                if (this.swingPhase === 2 && Math.random() < this.energyIntensity * 0.1) {
+                    this.generateEnergyParticles();
+                }
+
+                // Add racket trail
+                this.racketTrail.push({
+                    x: this.player.racketEnd.x,
+                    y: this.player.racketEnd.y,
+                    energy: this.player.racketEnergy
+                });
+                if (this.racketTrail.length > this.trailLength) {
+                    this.racketTrail.shift();
+                }
+            }
+
+            generateEnergyParticles() {
+                const segments = [
+                    { pos: this.player.rightFoot, energy: this.player.groundEnergy, color: '#ff4444' },
+                    { pos: this.player.rightKnee, energy: this.player.legEnergy, color: '#ff8844' },
+                    { pos: this.player.hips, energy: this.player.hipEnergy, color: '#ffcc44' },
+                    { pos: this.player.shoulders, energy: this.player.torsoEnergy, color: '#44ff44' },
+                    { pos: this.player.rightShoulder, energy: this.player.shoulderEnergy, color: '#44ccff' },
+                    { pos: this.player.rightElbow, energy: this.player.armEnergy, color: '#4444ff' },
+                    { pos: this.player.racketEnd, energy: this.player.racketEnergy, color: '#cc44ff' }
+                ];
+
+                segments.forEach(segment => {
+                    if (segment.energy > 0.3) {
+                        this.energyParticles.push({
+                            x: segment.pos.x,
+                            y: segment.pos.y,
+                            vx: (Math.random() - 0.5) * 2,
+                            vy: -Math.random() * 3,
+                            life: 1,
+                            color: segment.color,
+                            size: 2 + Math.random() * 3
+                        });
+                    }
+                });
+            }
+
+            drawPlayer() {
+                const p = this.player;
+
+                // Draw energy glows on active segments
+                const segments = [
+                    { from: p.rightFoot, to: p.rightKnee, energy: p.legEnergy, color: '#ff8844' },
+                    { from: p.rightKnee, to: p.hips, energy: p.legEnergy, color: '#ff8844' },
+                    { from: p.hips, to: p.shoulders, energy: p.torsoEnergy, color: '#44ff44' },
+                    { from: p.rightShoulder, to: p.rightElbow, energy: p.shoulderEnergy, color: '#44ccff' },
+                    { from: p.rightElbow, to: p.rightHand, energy: p.armEnergy, color: '#4444ff' },
+                    { from: p.rightHand, to: p.racketEnd, energy: p.racketEnergy, color: '#cc44ff' }
+                ];
+
+                segments.forEach(segment => {
+                    if (segment.energy > 0.1) {
+                        this.ctx.strokeStyle = segment.color;
+                        this.ctx.lineWidth = 3 + segment.energy * 5;
+                        this.ctx.globalAlpha = segment.energy * 0.8;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(segment.from.x, segment.from.y);
+                        this.ctx.lineTo(segment.to.x, segment.to.y);
+                        this.ctx.stroke();
+                    }
+                });
+
+                this.ctx.globalAlpha = 1;
+
+                // Draw stick figure
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+
+                // Legs
+                this.ctx.beginPath();
+                this.ctx.moveTo(p.leftFoot.x, p.leftFoot.y);
+                this.ctx.lineTo(p.leftKnee.x, p.leftKnee.y);
+                this.ctx.lineTo(p.hips.x, p.hips.y);
+                this.ctx.lineTo(p.rightKnee.x, p.rightKnee.y);
+                this.ctx.lineTo(p.rightFoot.x, p.rightFoot.y);
+                this.ctx.stroke();
+
+                // Torso
+                this.ctx.beginPath();
+                this.ctx.moveTo(p.hips.x, p.hips.y);
+                this.ctx.lineTo(p.shoulders.x, p.shoulders.y);
+                this.ctx.stroke();
+
+                // Head
+                this.ctx.beginPath();
+                this.ctx.arc(p.head.x, p.head.y, 20, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                // Arms
+                this.ctx.beginPath();
+                this.ctx.moveTo(p.leftShoulder.x, p.leftShoulder.y);
+                this.ctx.lineTo(p.leftElbow.x, p.leftElbow.y);
+                this.ctx.lineTo(p.leftHand.x, p.leftHand.y);
+                this.ctx.stroke();
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(p.rightShoulder.x, p.rightShoulder.y);
+                this.ctx.lineTo(p.rightElbow.x, p.rightElbow.y);
+                this.ctx.lineTo(p.rightHand.x, p.rightHand.y);
+                this.ctx.lineTo(p.racketEnd.x, p.racketEnd.y);
+                this.ctx.stroke();
+
+                // Racket head
+                this.ctx.fillStyle = '#cc44ff';
+                this.ctx.globalAlpha = 0.3 + p.racketEnergy * 0.7;
+                this.ctx.beginPath();
+                this.ctx.ellipse(p.racketEnd.x, p.racketEnd.y, 25, 35, this.player.shoulderRotation * Math.PI / 180, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.globalAlpha = 1;
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+
+                // Ground force indicators
+                if (p.groundEnergy > 0.1) {
+                    this.ctx.fillStyle = '#ff4444';
+                    this.ctx.globalAlpha = p.groundEnergy * 0.6;
+                    for (let i = 0; i < 3; i++) {
+                        this.ctx.beginPath();
+                        this.ctx.arc(
+                            p.rightFoot.x + (Math.random() - 0.5) * 40,
+                            p.rightFoot.y + 5 + i * 10,
+                            5 - i * 1.5,
+                            0,
+                            Math.PI * 2
+                        );
+                        this.ctx.fill();
+                    }
+                    this.ctx.globalAlpha = 1;
+                }
+
+                // Joints
+                this.ctx.fillStyle = '#ffffff';
+                const joints = [p.leftKnee, p.rightKnee, p.hips, p.shoulders, p.leftElbow, p.rightElbow, p.leftHand, p.rightHand];
+                joints.forEach(joint => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(joint.x, joint.y, 5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+
+            drawRacketTrail() {
+                if (this.racketTrail.length < 2) return;
+
+                for (let i = 1; i < this.racketTrail.length; i++) {
+                    const point = this.racketTrail[i];
+                    const prevPoint = this.racketTrail[i - 1];
+                    const alpha = (i / this.racketTrail.length) * point.energy;
+
+                    this.ctx.strokeStyle = `rgba(204, 68, 255, ${alpha * 0.6})`;
+                    this.ctx.lineWidth = 3 + point.energy * 4;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(prevPoint.x, prevPoint.y);
+                    this.ctx.lineTo(point.x, point.y);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawEnergyParticles() {
+                this.energyParticles = this.energyParticles.filter(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life -= 0.02;
+
+                    if (particle.life <= 0) return false;
+
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.globalAlpha = particle.life * 0.7;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    return true;
+                });
+                this.ctx.globalAlpha = 1;
+            }
+
+            drawBall() {
+                if (!this.ball) return;
+
+                if (this.ball.hit) {
+                    this.ball.x += this.ball.vx;
+                    this.ball.y += this.ball.vy;
+                    this.ball.vy += 0.3; // Gravity
+
+                    if (this.ball.x > this.canvas.width || this.ball.y > this.canvas.height) {
+                        this.ball = null;
+                        return;
+                    }
+                }
+
+                // Draw ball
+                this.ctx.fillStyle = '#ffff00';
+                this.ctx.beginPath();
+                this.ctx.arc(this.ball.x, this.ball.y, 8, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Ball trail
+                this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.ball.x - this.ball.vx * 2, this.ball.y - this.ball.vy * 2);
+                this.ctx.lineTo(this.ball.x, this.ball.y);
+                this.ctx.stroke();
+            }
+
+            draw() {
+                // Background - tennis court
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#0a2a1a');
+                gradient.addColorStop(1, '#0a1a0a');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Court lines
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 550);
+                this.ctx.lineTo(this.canvas.width, 550);
+                this.ctx.stroke();
+
+                // Net
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(750, 400);
+                this.ctx.lineTo(750, 550);
+                this.ctx.stroke();
+
+                this.drawRacketTrail();
+                this.drawEnergyParticles();
+                this.drawPlayer();
+                this.drawBall();
+            }
+
+            animate() {
+                if (!this.isAnimating) return;
+
+                this.time++;
+                this.updatePlayerPose();
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+
+                if (this.isAnimating) {
+                    btn.textContent = 'Stop Forehand';
+                    btn.classList.add('active');
+                    this.animate();
+                } else {
+                    btn.textContent = 'Start Forehand';
+                    btn.classList.remove('active');
+                }
+            }
+
+            reset() {
+                this.time = 0;
+                this.swingPhase = 0;
+                this.isAnimating = false;
+                this.player = this.createPlayer();
+                this.energyParticles = [];
+                this.racketTrail = [];
+                this.ball = null;
+
+                const btn = document.getElementById('animateBtn');
+                btn.textContent = 'Start Forehand';
+                btn.classList.remove('active');
+
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('kineticCanvas');
+            new KineticChain(canvas);
+        });
+    </script>
+</body>
+</html>
