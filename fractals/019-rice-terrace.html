@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>019 - Rice Terrace | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #87ceeb;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 180px;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+            accent-color: #27ae60;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 800px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #27ae60;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>019 - Rice Terrace</h1>
+            <div class="info">November 3, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="terraceCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">Start Growing</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="slider-controls">
+                <div class="slider-group">
+                    <label>Growth Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="20" value="8" step="1">
+                    <div class="value-display" id="speedValue">8</div>
+                </div>
+                <div class="slider-group">
+                    <label>Terraces</label>
+                    <input type="range" id="terraceSlider" min="5" max="15" value="9" step="1">
+                    <div class="value-display" id="terraceValue">9</div>
+                </div>
+                <div class="slider-group">
+                    <label>Rice Density</label>
+                    <input type="range" id="densitySlider" min="20" max="100" value="50" step="10">
+                    <div class="value-display" id="densityValue">50</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Rice Terrace Growth Simulation</h2>
+            <p>
+                This visualization captures the agricultural beauty of terraced rice paddies, a farming technique
+                that has been used for thousands of years in mountainous regions of Asia. The stepped landscape
+                creates a fractal-like pattern where each terrace mirrors the others at different scales, creating
+                a recursive visual harmony.
+            </p>
+            <p>
+                Watch as rice plants emerge and grow from the flooded paddies, starting from the lower terraces
+                and gradually spreading upward. The growth pattern follows natural agricultural cycles, with
+                each plant beginning as a small sprout and gradually reaching full height. The water in the
+                paddies reflects the sky, creating a shimmering effect that changes as the rice grows.
+            </p>
+            <p>
+                The fractal nature appears in multiple dimensions: the stepped terraces themselves create a
+                self-similar pattern across the landscape, while each rice plant's growth mirrors the collective
+                growth of the entire field. Adjust the parameters to explore different terrace configurations
+                and growth patterns.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class RiceTerraceSimulation {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+
+                // Portrait orientation
+                this.canvas.width = 600;
+                this.canvas.height = 800;
+
+                this.terraceCount = 9;
+                this.riceDensity = 50;
+                this.speed = 8;
+
+                this.isPlaying = false;
+                this.isPaused = false;
+                this.growthProgress = 0;
+                this.lastTime = 0;
+
+                this.terraces = [];
+                this.ricePlants = [];
+
+                this.setupEventListeners();
+                this.generateTerraces();
+                this.generateRicePlants();
+                this.draw();
+            }
+
+            setupEventListeners() {
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.start();
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', () => {
+                    this.togglePause();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed;
+                });
+
+                document.getElementById('terraceSlider').addEventListener('input', (e) => {
+                    this.terraceCount = parseInt(e.target.value);
+                    document.getElementById('terraceValue').textContent = this.terraceCount;
+                    this.regenerate();
+                });
+
+                document.getElementById('densitySlider').addEventListener('input', (e) => {
+                    this.riceDensity = parseInt(e.target.value);
+                    document.getElementById('densityValue').textContent = this.riceDensity;
+                    this.regenerate();
+                });
+            }
+
+            generateTerraces() {
+                this.terraces = [];
+                const padding = 50;
+                const availableHeight = this.canvas.height - padding * 2;
+
+                for (let i = 0; i < this.terraceCount; i++) {
+                    const y = padding + (i / this.terraceCount) * availableHeight;
+                    const nextY = padding + ((i + 1) / this.terraceCount) * availableHeight;
+                    const height = nextY - y;
+
+                    // Create curved terrace paths
+                    const points = [];
+                    const segments = 20;
+
+                    for (let j = 0; j <= segments; j++) {
+                        const x = (j / segments) * this.canvas.width;
+                        // Add natural curve variation
+                        const curve = Math.sin(j * 0.5 + i * 0.3) * 10;
+                        points.push({ x, y: y + curve });
+                    }
+
+                    this.terraces.push({
+                        index: i,
+                        points,
+                        bottomY: nextY,
+                        height,
+                        waterLevel: y + height * 0.7
+                    });
+                }
+            }
+
+            generateRicePlants() {
+                this.ricePlants = [];
+
+                this.terraces.forEach((terrace, tIndex) => {
+                    const plantsInTerrace = Math.floor(this.riceDensity * (this.canvas.width / 100));
+
+                    for (let i = 0; i < plantsInTerrace; i++) {
+                        const x = (i / plantsInTerrace) * this.canvas.width + Math.random() * 10 - 5;
+                        const avgY = terrace.points[0].y;
+                        const y = terrace.waterLevel - 5 + Math.random() * 5;
+
+                        this.ricePlants.push({
+                            x,
+                            y,
+                            terraceIndex: tIndex,
+                            height: 0,
+                            maxHeight: 30 + Math.random() * 20,
+                            growthDelay: tIndex * 0.1 + Math.random() * 0.2,
+                            swayOffset: Math.random() * Math.PI * 2,
+                            blades: 3 + Math.floor(Math.random() * 3)
+                        });
+                    }
+                });
+            }
+
+            regenerate() {
+                this.generateTerraces();
+                this.generateRicePlants();
+                if (!this.isPlaying) {
+                    this.draw();
+                }
+            }
+
+            start() {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.isPaused = false;
+                const btn = document.getElementById('startBtn');
+                btn.textContent = 'Growing';
+                btn.classList.add('active');
+                this.lastTime = performance.now();
+                requestAnimationFrame((time) => this.animate(time));
+            }
+
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                const btn = document.getElementById('pauseBtn');
+                btn.classList.toggle('active', this.isPaused);
+                if (!this.isPaused) {
+                    this.lastTime = performance.now();
+                }
+            }
+
+            reset() {
+                this.isPlaying = false;
+                this.isPaused = false;
+                this.growthProgress = 0;
+                this.ricePlants.forEach(plant => plant.height = 0);
+
+                const btn = document.getElementById('startBtn');
+                btn.textContent = 'Start Growing';
+                btn.classList.remove('active');
+
+                this.draw();
+            }
+
+            animate(time) {
+                if (!this.isPlaying) return;
+
+                const deltaTime = time - this.lastTime;
+                this.lastTime = time;
+
+                if (!this.isPaused) {
+                    this.growthProgress += (this.speed / 1000) * deltaTime;
+
+                    // Update rice plant growth
+                    this.ricePlants.forEach(plant => {
+                        const startGrowth = plant.growthDelay;
+                        const endGrowth = startGrowth + 2;
+
+                        if (this.growthProgress > startGrowth) {
+                            const progress = Math.min(1, (this.growthProgress - startGrowth) / (endGrowth - startGrowth));
+                            plant.height = plant.maxHeight * this.easeOutCubic(progress);
+                        }
+                    });
+
+                    // Reset if all plants are fully grown
+                    if (this.growthProgress > 3) {
+                        this.growthProgress = 0;
+                    }
+                }
+
+                this.draw();
+                requestAnimationFrame((time) => this.animate(time));
+            }
+
+            easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            draw() {
+                // Sky gradient
+                const skyGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                skyGradient.addColorStop(0, '#87ceeb');
+                skyGradient.addColorStop(1, '#e0f6ff');
+                this.ctx.fillStyle = skyGradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw terraces from back to front
+                this.terraces.forEach((terrace, index) => {
+                    this.drawTerrace(terrace, index);
+                });
+            }
+
+            drawTerrace(terrace, index) {
+                const ctx = this.ctx;
+
+                // Draw terrace wall (brown earth)
+                ctx.fillStyle = this.getTerraceColor(index);
+                ctx.beginPath();
+                ctx.moveTo(0, terrace.points[0].y);
+
+                terrace.points.forEach(point => {
+                    ctx.lineTo(point.x, point.y);
+                });
+
+                ctx.lineTo(this.canvas.width, terrace.bottomY);
+                ctx.lineTo(0, terrace.bottomY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw terrace edge highlight
+                ctx.strokeStyle = 'rgba(101, 67, 33, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                terrace.points.forEach((point, i) => {
+                    if (i === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+
+                // Draw water
+                const waterY = terrace.waterLevel;
+                const waterGradient = ctx.createLinearGradient(0, terrace.points[0].y, 0, waterY);
+                waterGradient.addColorStop(0, 'rgba(135, 206, 235, 0.4)');
+                waterGradient.addColorStop(1, 'rgba(100, 150, 200, 0.6)');
+
+                ctx.fillStyle = waterGradient;
+                ctx.beginPath();
+                ctx.moveTo(0, terrace.points[0].y);
+                terrace.points.forEach(point => {
+                    ctx.lineTo(point.x, point.y);
+                });
+                ctx.lineTo(this.canvas.width, waterY);
+                ctx.lineTo(0, waterY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw water shimmer
+                const time = performance.now() * 0.001;
+                for (let i = 0; i < 5; i++) {
+                    const shimmerX = (i / 5) * this.canvas.width + Math.sin(time + i) * 20;
+                    const shimmerY = terrace.points[0].y + terrace.height * 0.3;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + Math.sin(time * 2 + i) * 0.1})`;
+                    ctx.fillRect(shimmerX, shimmerY, 30, 2);
+                }
+
+                // Draw rice plants for this terrace
+                this.ricePlants
+                    .filter(plant => plant.terraceIndex === index)
+                    .forEach(plant => this.drawRicePlant(plant, time));
+            }
+
+            getTerraceColor(index) {
+                // Vary the terrace colors slightly for depth
+                const baseColors = [
+                    'rgb(139, 90, 43)',
+                    'rgb(120, 80, 40)',
+                    'rgb(130, 85, 42)',
+                    'rgb(125, 82, 41)'
+                ];
+                return baseColors[index % baseColors.length];
+            }
+
+            drawRicePlant(plant, time) {
+                if (plant.height < 1) return;
+
+                const ctx = this.ctx;
+                const sway = Math.sin(time * 2 + plant.swayOffset) * 2;
+
+                // Draw rice blades
+                for (let i = 0; i < plant.blades; i++) {
+                    const angle = (i / plant.blades) * 0.4 - 0.2;
+                    const bladeHeight = plant.height * (0.8 + Math.random() * 0.2);
+
+                    ctx.strokeStyle = this.getRiceColor(plant.height / plant.maxHeight);
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(plant.x, plant.y);
+
+                    const controlX = plant.x + Math.sin(angle) * 5 + sway;
+                    const controlY = plant.y - bladeHeight / 2;
+                    const endX = plant.x + Math.sin(angle) * 8 + sway * 2;
+                    const endY = plant.y - bladeHeight;
+
+                    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+                    ctx.stroke();
+
+                    // Draw seed head if fully grown
+                    if (plant.height >= plant.maxHeight * 0.9) {
+                        ctx.fillStyle = '#f4e4c1';
+                        ctx.beginPath();
+                        ctx.arc(endX, endY, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            getRiceColor(growthProgress) {
+                // Transition from light green to darker green as it grows
+                if (growthProgress < 0.5) {
+                    return `rgb(${100 + growthProgress * 50}, ${200 - growthProgress * 30}, ${50 + growthProgress * 20})`;
+                } else {
+                    return `rgb(${34 + (growthProgress - 0.5) * 20}, ${139 - (growthProgress - 0.5) * 20}, 34)`;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('terraceCanvas');
+            new RiceTerraceSimulation(canvas);
+        });
+    </script>
+</body>
+</html>
