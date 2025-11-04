@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>020 - Neuron Fractal Network | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #0a0a15;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #aaa;
+            z-index: 5;
+        }
+
+        .dimension-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: monospace;
+            z-index: 5;
+        }
+
+        .dimension-display.natural {
+            color: #4af;
+        }
+
+        .dimension-display.low {
+            color: #f4a;
+        }
+
+        .dimension-display.high {
+            color: #fa4;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #4af;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        .metrics-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .metric-value.connectivity {
+            color: #4af;
+        }
+
+        .metric-value.material-cost {
+            color: #fa4;
+        }
+
+        .metric-value.energy-cost {
+            color: #f44;
+        }
+
+        .metric-value.dimension {
+            color: #4f4;
+        }
+
+        .metric-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .metric-bar-fill.connectivity {
+            background: linear-gradient(90deg, #4af 0%, #4fc 100%);
+        }
+
+        .metric-bar-fill.material-cost {
+            background: linear-gradient(90deg, #fa4 0%, #f84 100%);
+        }
+
+        .metric-bar-fill.energy-cost {
+            background: linear-gradient(90deg, #f44 0%, #f84 100%);
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #4af;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .natural-range-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(68, 170, 255, 0.2);
+            border: 2px solid rgba(68, 170, 255, 0.5);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #4af;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>020 - Neuron Fractal Network</h1>
+            <div class="info">November 4, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="visualization-grid">
+            <div class="canvas-container">
+                <div class="canvas-label">Interactive Neuron</div>
+                <div class="dimension-display" id="mainDimension">D = 1.41</div>
+                <canvas id="mainCanvas" width="650" height="500"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Fractal Dimension Spectrum</div>
+                <canvas id="spectrumCanvas" width="650" height="500"></canvas>
+                <div class="natural-range-indicator">Natural Neurons: D ≈ 1.33 - 1.51</div>
+            </div>
+
+            <div class="canvas-container" style="grid-column: 1 / -1;">
+                <div class="canvas-label">Cost-Benefit Analysis</div>
+                <canvas id="graphCanvas" width="1320" height="400"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Branch Length Ratio</label>
+                    <input type="range" id="lengthSlider" min="0.5" max="0.9" value="0.75" step="0.05">
+                    <div class="value-display" id="lengthValue">0.75</div>
+                </div>
+                <div class="slider-group">
+                    <label>Weave Angle (degrees)</label>
+                    <input type="range" id="weaveSlider" min="0" max="30" value="10" step="2">
+                    <div class="value-display" id="weaveValue">10°</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fork Angle (degrees)</label>
+                    <input type="range" id="forkSlider" min="15" max="60" value="30" step="3">
+                    <div class="value-display" id="forkValue">30°</div>
+                </div>
+            </div>
+
+            <div class="metrics-panel">
+                <div class="metric-item">
+                    <div class="metric-label">Fractal Dimension (D)</div>
+                    <div class="metric-value dimension" id="dimensionMetric">1.41</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill connectivity" id="dimensionBar" style="width: 41%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Connectivity</div>
+                    <div class="metric-value connectivity" id="connectivityMetric">78%</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill connectivity" id="connectivityBar" style="width: 78%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Material Cost</div>
+                    <div class="metric-value material-cost" id="materialMetric">65%</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill material-cost" id="materialBar" style="width: 65%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Energy Cost</div>
+                    <div class="metric-value energy-cost" id="energyMetric">52%</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill energy-cost" id="energyBar" style="width: 52%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="resetBtn">Reset to Natural Neuron</button>
+                <button id="randomBtn">Random Configuration</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Neuronal Fractal Branching Optimization</h2>
+            <p>
+                This visualization demonstrates how neurons balance three competing evolutionary pressures through
+                their fractal branching patterns. The fractal dimension (D) serves as a "complexity meter" that
+                quantifies how densely the branches fill space. Natural neurons cluster around D ≈ 1.33 to 1.51,
+                representing an optimal balance between maximizing connectivity and minimizing biological costs.
+            </p>
+            <p>
+                The branching pattern is controlled by three key parameters: <strong>branch length ratio</strong>
+                determines how much shorter each successive branch becomes; <strong>weave angle</strong> controls
+                how much branches deviate from straight growth; and <strong>fork angle</strong> sets the splitting
+                angle when branches divide. Together, these parameters create the intricate dendritic trees that
+                allow neurons to connect with thousands of neighbors.
+            </p>
+            <p>
+                The cost-benefit graph reveals a fascinating insight: natural neurons prioritize connectivity more
+                heavily than a simple optimization would suggest. While both material costs (how much biological
+                mass is needed) and energy costs (metabolic power requirements) increase with fractal dimension,
+                neurons operate at a slightly higher D than pure efficiency would dictate. This suggests that
+                evolutionary pressure favors robust neural networks over marginal energy savings, highlighting
+                the brain's fundamental drive for maximal information processing capacity.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class NeuronSimulation {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.spectrumCanvas = document.getElementById('spectrumCanvas');
+                this.spectrumCtx = this.spectrumCanvas.getContext('2d');
+                this.graphCanvas = document.getElementById('graphCanvas');
+                this.graphCtx = this.graphCanvas.getContext('2d');
+
+                // Parameters
+                this.lengthRatio = 0.75;
+                this.weaveAngle = 10;
+                this.forkAngle = 30;
+
+                // Metrics
+                this.branches = [];
+                this.endpoints = [];
+
+                this.setupEventListeners();
+                this.drawSpectrum();
+                this.drawGraph();
+                this.regenerateNeuron();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('lengthSlider').addEventListener('input', (e) => {
+                    this.lengthRatio = parseFloat(e.target.value);
+                    document.getElementById('lengthValue').textContent = this.lengthRatio.toFixed(2);
+                    this.regenerateNeuron();
+                });
+
+                document.getElementById('weaveSlider').addEventListener('input', (e) => {
+                    this.weaveAngle = parseFloat(e.target.value);
+                    document.getElementById('weaveValue').textContent = this.weaveAngle + '°';
+                    this.regenerateNeuron();
+                });
+
+                document.getElementById('forkSlider').addEventListener('input', (e) => {
+                    this.forkAngle = parseFloat(e.target.value);
+                    document.getElementById('forkValue').textContent = this.forkAngle + '°';
+                    this.regenerateNeuron();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.reset();
+                });
+
+                document.getElementById('randomBtn').addEventListener('click', () => {
+                    this.randomize();
+                });
+            }
+
+            reset() {
+                this.lengthRatio = 0.75;
+                this.weaveAngle = 10;
+                this.forkAngle = 30;
+
+                document.getElementById('lengthSlider').value = this.lengthRatio;
+                document.getElementById('lengthValue').textContent = this.lengthRatio.toFixed(2);
+                document.getElementById('weaveSlider').value = this.weaveAngle;
+                document.getElementById('weaveValue').textContent = this.weaveAngle + '°';
+                document.getElementById('forkSlider').value = this.forkAngle;
+                document.getElementById('forkValue').textContent = this.forkAngle + '°';
+
+                this.regenerateNeuron();
+            }
+
+            randomize() {
+                this.lengthRatio = 0.5 + Math.random() * 0.4;
+                this.weaveAngle = Math.random() * 30;
+                this.forkAngle = 15 + Math.random() * 45;
+
+                document.getElementById('lengthSlider').value = this.lengthRatio;
+                document.getElementById('lengthValue').textContent = this.lengthRatio.toFixed(2);
+                document.getElementById('weaveSlider').value = this.weaveAngle;
+                document.getElementById('weaveValue').textContent = this.weaveAngle.toFixed(0) + '°';
+                document.getElementById('forkSlider').value = this.forkAngle;
+                document.getElementById('forkValue').textContent = this.forkAngle.toFixed(0) + '°';
+
+                this.regenerateNeuron();
+            }
+
+            regenerateNeuron() {
+                this.branches = [];
+                this.endpoints = [];
+
+                const centerX = this.mainCanvas.width / 2;
+                const centerY = this.mainCanvas.height / 2;
+                const initialLength = 80;
+
+                // Generate branches in multiple directions from soma
+                const numPrimaryBranches = 8;
+                for (let i = 0; i < numPrimaryBranches; i++) {
+                    const angle = (i / numPrimaryBranches) * Math.PI * 2;
+                    this.growBranch(
+                        centerX, centerY,
+                        angle,
+                        initialLength,
+                        6, // depth
+                        1.0 // initial width
+                    );
+                }
+
+                this.updateMetrics();
+            }
+
+            growBranch(x, y, angle, length, depth, width) {
+                if (depth <= 0 || length < 2) {
+                    this.endpoints.push({ x, y });
+                    return;
+                }
+
+                // Apply weave (random deviation)
+                const weaveRad = (this.weaveAngle * Math.PI / 180);
+                const weaveDeviation = (Math.random() - 0.5) * weaveRad;
+                const actualAngle = angle + weaveDeviation;
+
+                const endX = x + Math.cos(actualAngle) * length;
+                const endY = y + Math.sin(actualAngle) * length;
+
+                this.branches.push({
+                    x1: x, y1: y,
+                    x2: endX, y2: endY,
+                    width,
+                    depth
+                });
+
+                // Fork into two branches
+                const forkRad = this.forkAngle * Math.PI / 180;
+                const newLength = length * this.lengthRatio;
+                const newWidth = width * 0.7;
+
+                this.growBranch(
+                    endX, endY,
+                    actualAngle - forkRad / 2,
+                    newLength,
+                    depth - 1,
+                    newWidth
+                );
+
+                this.growBranch(
+                    endX, endY,
+                    actualAngle + forkRad / 2,
+                    newLength,
+                    depth - 1,
+                    newWidth
+                );
+            }
+
+            calculateFractalDimension() {
+                // Approximate fractal dimension using box-counting
+                // Simplified: use relationship between parameters and known D values
+
+                // Base dimension starts around 1.0
+                let D = 1.0;
+
+                // Length ratio contribution (higher ratio = more space filling)
+                D += (this.lengthRatio - 0.5) * 0.8;
+
+                // Weave angle contribution (more weave = higher D)
+                D += (this.weaveAngle / 30) * 0.3;
+
+                // Fork angle contribution (optimal fork around 30-40 degrees)
+                const forkFactor = 1 - Math.abs(this.forkAngle - 35) / 35;
+                D += forkFactor * 0.2;
+
+                // Normalize to realistic range
+                D = Math.max(1.0, Math.min(2.0, D));
+
+                return D;
+            }
+
+            updateMetrics() {
+                const D = this.calculateFractalDimension();
+
+                // Connectivity increases with D (more branches = more connections)
+                const connectivity = Math.min(100, ((D - 1.0) / 1.0) * 100);
+
+                // Material cost increases with total branch length
+                const totalLength = this.branches.reduce((sum, b) => {
+                    const len = Math.sqrt(Math.pow(b.x2 - b.x1, 2) + Math.pow(b.y2 - b.y1, 2));
+                    return sum + len;
+                }, 0);
+                const materialCost = Math.min(100, (totalLength / 3000) * 100);
+
+                // Energy cost increases super-linearly with D
+                const energyCost = Math.min(100, Math.pow((D - 1.0) / 1.0, 1.5) * 100);
+
+                // Update displays
+                document.getElementById('dimensionMetric').textContent = D.toFixed(2);
+                document.getElementById('connectivityMetric').textContent = connectivity.toFixed(0) + '%';
+                document.getElementById('materialMetric').textContent = materialCost.toFixed(0) + '%';
+                document.getElementById('energyMetric').textContent = energyCost.toFixed(0) + '%';
+
+                document.getElementById('dimensionBar').style.width = ((D - 1.0) * 100) + '%';
+                document.getElementById('connectivityBar').style.width = connectivity + '%';
+                document.getElementById('materialBar').style.width = materialCost + '%';
+                document.getElementById('energyBar').style.width = energyCost + '%';
+
+                // Update main dimension display
+                const dimDisplay = document.getElementById('mainDimension');
+                dimDisplay.textContent = 'D = ' + D.toFixed(2);
+
+                if (D >= 1.33 && D <= 1.51) {
+                    dimDisplay.className = 'dimension-display natural';
+                } else if (D < 1.33) {
+                    dimDisplay.className = 'dimension-display low';
+                } else {
+                    dimDisplay.className = 'dimension-display high';
+                }
+
+                this.drawGraph();
+            }
+
+            drawMainNeuron() {
+                const ctx = this.mainCtx;
+                const time = performance.now() * 0.001;
+
+                // Clear
+                ctx.fillStyle = '#0a0a15';
+                ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+
+                // Draw branches
+                this.branches.forEach(branch => {
+                    const gradient = ctx.createLinearGradient(branch.x1, branch.y1, branch.x2, branch.y2);
+                    gradient.addColorStop(0, `rgba(68, 170, 255, ${0.8 * branch.width})`);
+                    gradient.addColorStop(1, `rgba(68, 255, 170, ${0.4 * branch.width})`);
+
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = branch.width * 2;
+                    ctx.lineCap = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(branch.x1, branch.y1);
+                    ctx.lineTo(branch.x2, branch.y2);
+                    ctx.stroke();
+                });
+
+                // Draw soma (cell body)
+                const centerX = this.mainCanvas.width / 2;
+                const centerY = this.mainCanvas.height / 2;
+                const somaRadius = 12;
+
+                const somaGradient = ctx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, somaRadius
+                );
+                somaGradient.addColorStop(0, 'rgba(255, 170, 68, 1)');
+                somaGradient.addColorStop(1, 'rgba(255, 68, 68, 0.6)');
+
+                ctx.fillStyle = somaGradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, somaRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw endpoints (synapses) with pulse effect
+                this.endpoints.forEach((point, i) => {
+                    const pulse = 0.5 + Math.sin(time * 3 + i * 0.5) * 0.5;
+                    ctx.fillStyle = `rgba(68, 255, 170, ${pulse * 0.6})`;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 2 + pulse * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            drawSpectrum() {
+                const ctx = this.spectrumCtx;
+                const width = this.spectrumCanvas.width;
+                const height = this.spectrumCanvas.height;
+
+                ctx.fillStyle = '#0a0a15';
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw neurons at different D values
+                const dValues = [1.0, 1.2, 1.35, 1.41, 1.48, 1.7];
+                const cols = 3;
+                const rows = 2;
+
+                for (let i = 0; i < dValues.length; i++) {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+
+                    const cellWidth = width / cols;
+                    const cellHeight = height / rows;
+                    const centerX = cellWidth * (col + 0.5);
+                    const centerY = cellHeight * (row + 0.5);
+
+                    const D = dValues[i];
+                    this.drawSpectrumNeuron(ctx, centerX, centerY, D, 40);
+
+                    // Label
+                    const isNatural = D >= 1.33 && D <= 1.51;
+                    ctx.fillStyle = isNatural ? '#4af' : '#888';
+                    ctx.font = 'bold 16px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`D = ${D.toFixed(2)}`, centerX, centerY + 80);
+
+                    if (isNatural) {
+                        ctx.fillStyle = '#4af';
+                        ctx.font = '11px sans-serif';
+                        ctx.fillText('Natural Range', centerX, centerY + 98);
+                    }
+                }
+            }
+
+            drawSpectrumNeuron(ctx, cx, cy, D, size) {
+                // Parameters derived from D
+                const lengthRatio = 0.4 + (D - 1.0) * 0.4;
+                const weaveAngle = (D - 1.0) * 20;
+                const forkAngle = 25 + (D - 1.2) * 15;
+
+                // Draw soma
+                ctx.fillStyle = `rgba(255, 170, 68, ${D > 1.33 && D < 1.51 ? 0.8 : 0.4})`;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw branches
+                const numBranches = 6;
+                for (let i = 0; i < numBranches; i++) {
+                    const angle = (i / numBranches) * Math.PI * 2;
+                    this.drawSpectrumBranch(
+                        ctx, cx, cy, angle, size,
+                        D > 1.33 && D < 1.51 ? 4 : 3,
+                        lengthRatio, weaveAngle, forkAngle,
+                        D >= 1.33 && D <= 1.51
+                    );
+                }
+            }
+
+            drawSpectrumBranch(ctx, x, y, angle, length, depth, lengthRatio, weaveAngle, forkAngle, isNatural) {
+                if (depth <= 0 || length < 1) return;
+
+                const weaveRad = (weaveAngle * Math.PI / 180);
+                const weaveDeviation = (Math.random() - 0.5) * weaveRad;
+                const actualAngle = angle + weaveDeviation;
+
+                const endX = x + Math.cos(actualAngle) * length;
+                const endY = y + Math.sin(actualAngle) * length;
+
+                ctx.strokeStyle = isNatural ? 'rgba(68, 170, 255, 0.6)' : 'rgba(136, 136, 136, 0.4)';
+                ctx.lineWidth = depth * 0.5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+
+                const forkRad = forkAngle * Math.PI / 180;
+                const newLength = length * lengthRatio;
+
+                this.drawSpectrumBranch(
+                    ctx, endX, endY,
+                    actualAngle - forkRad / 2,
+                    newLength, depth - 1,
+                    lengthRatio, weaveAngle, forkAngle, isNatural
+                );
+
+                this.drawSpectrumBranch(
+                    ctx, endX, endY,
+                    actualAngle + forkRad / 2,
+                    newLength, depth - 1,
+                    lengthRatio, weaveAngle, forkAngle, isNatural
+                );
+            }
+
+            drawGraph() {
+                const ctx = this.graphCtx;
+                const width = this.graphCanvas.width;
+                const height = this.graphCanvas.height;
+                const padding = 60;
+
+                ctx.fillStyle = '#0a0a15';
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw axes
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, height - padding);
+                ctx.lineTo(width - padding, height - padding);
+                ctx.stroke();
+
+                // Labels
+                ctx.fillStyle = '#aaa';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Fractal Dimension (D)', width / 2, height - 20);
+
+                ctx.save();
+                ctx.translate(20, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Benefit / Cost (%)', 0, 0);
+                ctx.restore();
+
+                // Plot data
+                const minD = 1.0;
+                const maxD = 2.0;
+                const steps = 50;
+
+                const connectivity = [];
+                const materialCost = [];
+                const energyCost = [];
+
+                for (let i = 0; i <= steps; i++) {
+                    const D = minD + (i / steps) * (maxD - minD);
+
+                    // Connectivity increases with D
+                    const conn = Math.min(100, ((D - 1.0) / 1.0) * 100);
+                    connectivity.push({ D, value: conn });
+
+                    // Material cost increases linearly
+                    const mat = Math.min(100, ((D - 1.0) / 1.0) * 80);
+                    materialCost.push({ D, value: mat });
+
+                    // Energy cost increases super-linearly
+                    const energy = Math.min(100, Math.pow((D - 1.0) / 1.0, 1.5) * 90);
+                    energyCost.push({ D, value: energy });
+                }
+
+                // Draw curves
+                this.drawCurve(ctx, connectivity, '#4af', 'Connectivity', padding, width, height);
+                this.drawCurve(ctx, materialCost, '#fa4', 'Material Cost', padding, width, height);
+                this.drawCurve(ctx, energyCost, '#f44', 'Energy Cost', padding, width, height);
+
+                // Draw natural range highlight
+                const naturalMinD = 1.33;
+                const naturalMaxD = 1.51;
+                const xMin = padding + ((naturalMinD - minD) / (maxD - minD)) * (width - 2 * padding);
+                const xMax = padding + ((naturalMaxD - minD) / (maxD - minD)) * (width - 2 * padding);
+
+                ctx.fillStyle = 'rgba(68, 170, 255, 0.1)';
+                ctx.fillRect(xMin, padding, xMax - xMin, height - 2 * padding);
+
+                ctx.strokeStyle = 'rgba(68, 170, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(xMin, padding);
+                ctx.lineTo(xMin, height - padding);
+                ctx.moveTo(xMax, padding);
+                ctx.lineTo(xMax, height - padding);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw current D marker
+                const currentD = this.calculateFractalDimension();
+                const currentX = padding + ((currentD - minD) / (maxD - minD)) * (width - 2 * padding);
+
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(currentX, padding);
+                ctx.lineTo(currentX, height - padding);
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`D = ${currentD.toFixed(2)}`, currentX, padding - 10);
+
+                // Draw D axis labels
+                ctx.fillStyle = '#888';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                for (let d = 1.0; d <= 2.0; d += 0.2) {
+                    const x = padding + ((d - minD) / (maxD - minD)) * (width - 2 * padding);
+                    ctx.fillText(d.toFixed(1), x, height - padding + 20);
+                }
+            }
+
+            drawCurve(ctx, data, color, label, padding, width, height) {
+                const minD = 1.0;
+                const maxD = 2.0;
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                data.forEach((point, i) => {
+                    const x = padding + ((point.D - minD) / (maxD - minD)) * (width - 2 * padding);
+                    const y = height - padding - (point.value / 100) * (height - 2 * padding);
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                // Draw label at the end
+                const lastPoint = data[data.length - 1];
+                const lastX = padding + ((lastPoint.D - minD) / (maxD - minD)) * (width - 2 * padding);
+                const lastY = height - padding - (lastPoint.value / 100) * (height - 2 * padding);
+
+                ctx.fillStyle = color;
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(label, lastX - 10, lastY - 5);
+            }
+
+            animate() {
+                this.drawMainNeuron();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new NeuronSimulation();
+        });
+    </script>
+</body>
+</html>
