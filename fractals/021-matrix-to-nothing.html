@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>021 - Matrix to Nothing | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #0ff;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 900px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #0ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .phase-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 255, 0.2);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #0ff;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>021 - Matrix to Nothing</h1>
+            <div class="info">November 5, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="900" height="700"></canvas>
+            <div class="phase-indicator" id="phaseIndicator">EXPANDING</div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Grid Size</label>
+                    <input type="range" id="gridSizeSlider" min="5" max="30" value="15" step="1">
+                    <div class="value-display" id="gridSizeValue">15 x 15</div>
+                </div>
+                <div class="slider-group">
+                    <label>Animation Speed</label>
+                    <input type="range" id="speedSlider" min="0.5" max="5" value="1.5" step="0.1">
+                    <div class="value-display" id="speedValue">1.5x</div>
+                </div>
+                <div class="slider-group">
+                    <label>Collapse Mode</label>
+                    <select id="modeSelect">
+                        <option value="center">Center Point</option>
+                        <option value="multipoint">Multi-Point</option>
+                        <option value="wave">Wave Collapse</option>
+                        <option value="spiral">Spiral</option>
+                        <option value="corners">Four Corners</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Line Thickness</label>
+                    <input type="range" id="thicknessSlider" min="1" max="5" value="2" step="0.5">
+                    <div class="value-display" id="thicknessValue">2px</div>
+                </div>
+                <div class="slider-group">
+                    <label>Color Shift Speed</label>
+                    <input type="range" id="colorSlider" min="0" max="3" value="1" step="0.1">
+                    <div class="value-display" id="colorValue">1.0x</div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="resetBtn">Reset Animation</button>
+                <button id="pauseBtn">Pause</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>The Collapse of Structure</h2>
+            <p>
+                This visualization explores the concept of dimensional collapse, where a structured matrix of lines
+                gradually shrinks and converges into nothingness. The grid represents order and dimensionality,
+                while its collapse symbolizes the reduction of complexity to a singular point.
+            </p>
+            <p>
+                The animation cycles through different phases: expansion (lines growing from nothing),
+                stability (full matrix visible), and collapse (shrinking back to nothing). Different collapse modes
+                show how the same structure can dissolve in fundamentally different ways - whether converging to a
+                central point, multiple attractors, or following wave-like patterns.
+            </p>
+            <p>
+                This fractal-like behavior mirrors phenomena in physics and mathematics, from the collapse of wave
+                functions in quantum mechanics to the singularities in black holes, where infinite structure
+                compresses into infinitesimal space.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class MatrixCollapse {
+            constructor() {
+                this.canvas = document.getElementById('mainCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                // Parameters
+                this.gridSize = 15;
+                this.speed = 1.5;
+                this.mode = 'center';
+                this.thickness = 2;
+                this.colorSpeed = 1;
+
+                // Animation state
+                this.time = 0;
+                this.isPaused = false;
+                this.lines = [];
+
+                this.setupEventListeners();
+                this.initializeLines();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('gridSizeSlider').addEventListener('input', (e) => {
+                    this.gridSize = parseInt(e.target.value);
+                    document.getElementById('gridSizeValue').textContent = `${this.gridSize} x ${this.gridSize}`;
+                    this.initializeLines();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = this.speed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('modeSelect').addEventListener('change', (e) => {
+                    this.mode = e.target.value;
+                });
+
+                document.getElementById('thicknessSlider').addEventListener('input', (e) => {
+                    this.thickness = parseFloat(e.target.value);
+                    document.getElementById('thicknessValue').textContent = this.thickness + 'px';
+                });
+
+                document.getElementById('colorSlider').addEventListener('input', (e) => {
+                    this.colorSpeed = parseFloat(e.target.value);
+                    document.getElementById('colorValue').textContent = this.colorSpeed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.time = 0;
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', (e) => {
+                    this.isPaused = !this.isPaused;
+                    e.target.textContent = this.isPaused ? 'Resume' : 'Pause';
+                });
+            }
+
+            initializeLines() {
+                this.lines = [];
+                const spacing = Math.min(this.canvas.width, this.canvas.height) * 0.9 / this.gridSize;
+                const offsetX = (this.canvas.width - spacing * (this.gridSize - 1)) / 2;
+                const offsetY = (this.canvas.height - spacing * (this.gridSize - 1)) / 2;
+
+                // Create horizontal lines
+                for (let i = 0; i < this.gridSize; i++) {
+                    this.lines.push({
+                        type: 'horizontal',
+                        index: i,
+                        baseY: offsetY + i * spacing,
+                        baseX1: offsetX,
+                        baseX2: offsetX + spacing * (this.gridSize - 1)
+                    });
+                }
+
+                // Create vertical lines
+                for (let i = 0; i < this.gridSize; i++) {
+                    this.lines.push({
+                        type: 'vertical',
+                        index: i,
+                        baseX: offsetX + i * spacing,
+                        baseY1: offsetY,
+                        baseY2: offsetY + spacing * (this.gridSize - 1)
+                    });
+                }
+            }
+
+            getCollapsePhase(time) {
+                // Cycle: expand (0-1), stable (1-2), collapse (2-3), nothing (3-4)
+                const cycle = time % 4;
+
+                if (cycle < 1) {
+                    return { phase: 'expanding', progress: cycle };
+                } else if (cycle < 2) {
+                    return { phase: 'stable', progress: 1 };
+                } else if (cycle < 3) {
+                    return { phase: 'collapsing', progress: 1 - (cycle - 2) };
+                } else {
+                    return { phase: 'nothing', progress: 0 };
+                }
+            }
+
+            getCollapseFactor(line, progress) {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                if (this.mode === 'center') {
+                    return progress;
+                }
+
+                if (this.mode === 'multipoint') {
+                    // Collapse to 4 quadrant centers
+                    let targetX, targetY;
+                    if (line.type === 'horizontal') {
+                        targetX = line.baseY < centerY ? centerX * 0.5 : centerX * 1.5;
+                        targetY = line.baseY < centerY ? centerY * 0.5 : centerY * 1.5;
+                    } else {
+                        targetX = line.baseX < centerX ? centerX * 0.5 : centerX * 1.5;
+                        targetY = line.baseX < centerX ? centerY * 0.5 : centerY * 1.5;
+                    }
+                    return progress;
+                }
+
+                if (this.mode === 'wave') {
+                    // Wave collapse from top to bottom
+                    const linePos = line.type === 'horizontal' ? line.baseY : line.baseX;
+                    const maxPos = line.type === 'horizontal' ? this.canvas.height : this.canvas.width;
+                    const waveOffset = (linePos / maxPos) * 0.5;
+                    return Math.max(0, Math.min(1, (progress - waveOffset) * 2));
+                }
+
+                if (this.mode === 'spiral') {
+                    // Spiral collapse
+                    const dist = line.type === 'horizontal'
+                        ? Math.abs(line.baseY - centerY)
+                        : Math.abs(line.baseX - centerX);
+                    const maxDist = Math.max(this.canvas.width, this.canvas.height) / 2;
+                    const spiralOffset = (dist / maxDist) * 0.3;
+                    return Math.max(0, Math.min(1, (progress - spiralOffset) * 1.5));
+                }
+
+                if (this.mode === 'corners') {
+                    // Collapse to four corners
+                    return progress;
+                }
+
+                return progress;
+            }
+
+            getCollapseTarget(line) {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                if (this.mode === 'center') {
+                    return { x: centerX, y: centerY };
+                }
+
+                if (this.mode === 'multipoint') {
+                    if (line.type === 'horizontal') {
+                        const quadX = line.baseY < centerY ? centerX * 0.5 : centerX * 1.5;
+                        const quadY = line.baseY < centerY ? centerY * 0.5 : centerY * 1.5;
+                        return { x: quadX, y: quadY };
+                    } else {
+                        const quadX = line.baseX < centerX ? centerX * 0.5 : centerX * 1.5;
+                        const quadY = line.baseX < centerX ? centerY * 0.5 : centerY * 1.5;
+                        return { x: quadX, y: quadY };
+                    }
+                }
+
+                if (this.mode === 'wave') {
+                    return { x: centerX, y: centerY };
+                }
+
+                if (this.mode === 'spiral') {
+                    return { x: centerX, y: centerY };
+                }
+
+                if (this.mode === 'corners') {
+                    if (line.type === 'horizontal') {
+                        const x = line.baseY < centerY ? 50 : this.canvas.width - 50;
+                        const y = 50;
+                        return { x, y };
+                    } else {
+                        const x = line.baseX < centerX ? 50 : this.canvas.width - 50;
+                        const y = this.canvas.height - 50;
+                        return { x, y };
+                    }
+                }
+
+                return { x: centerX, y: centerY };
+            }
+
+            drawLine(line, progress) {
+                const factor = this.getCollapseFactor(line, progress);
+                const target = this.getCollapseTarget(line);
+
+                let x1, y1, x2, y2;
+
+                if (line.type === 'horizontal') {
+                    x1 = line.baseX1 + (target.x - line.baseX1) * factor;
+                    x2 = line.baseX2 + (target.x - line.baseX2) * factor;
+                    y1 = line.baseY + (target.y - line.baseY) * factor;
+                    y2 = y1;
+                } else {
+                    x1 = line.baseX + (target.x - line.baseX) * factor;
+                    x2 = x1;
+                    y1 = line.baseY1 + (target.y - line.baseY1) * factor;
+                    y2 = line.baseY2 + (target.y - line.baseY2) * factor;
+                }
+
+                // Color based on position and time
+                const hue = (line.index * 10 + this.time * this.colorSpeed * 20) % 360;
+                const alpha = Math.max(0.2, 1 - factor * 0.5);
+
+                const gradient = this.ctx.createLinearGradient(x1, y1, x2, y2);
+                gradient.addColorStop(0, `hsla(${hue}, 100%, 50%, ${alpha})`);
+                gradient.addColorStop(1, `hsla(${(hue + 60) % 360}, 100%, 50%, ${alpha})`);
+
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = this.thickness;
+                this.ctx.lineCap = 'round';
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.stroke();
+
+                // Add glow effect
+                if (factor > 0.7) {
+                    this.ctx.shadowBlur = 20 * (factor - 0.7) / 0.3;
+                    this.ctx.shadowColor = `hsla(${hue}, 100%, 50%, ${alpha})`;
+                    this.ctx.stroke();
+                    this.ctx.shadowBlur = 0;
+                }
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const { phase, progress } = this.getCollapsePhase(this.time);
+
+                // Update phase indicator
+                const indicator = document.getElementById('phaseIndicator');
+                indicator.textContent = phase.toUpperCase();
+                indicator.style.borderColor =
+                    phase === 'expanding' ? 'rgba(0, 255, 0, 0.5)' :
+                    phase === 'stable' ? 'rgba(0, 255, 255, 0.5)' :
+                    phase === 'collapsing' ? 'rgba(255, 100, 0, 0.5)' :
+                    'rgba(100, 100, 100, 0.5)';
+                indicator.style.background =
+                    phase === 'expanding' ? 'rgba(0, 255, 0, 0.2)' :
+                    phase === 'stable' ? 'rgba(0, 255, 255, 0.2)' :
+                    phase === 'collapsing' ? 'rgba(255, 100, 0, 0.2)' :
+                    'rgba(100, 100, 100, 0.2)';
+                indicator.style.color =
+                    phase === 'expanding' ? '#0f0' :
+                    phase === 'stable' ? '#0ff' :
+                    phase === 'collapsing' ? '#f60' :
+                    '#666';
+
+                // Draw all lines
+                this.lines.forEach(line => {
+                    this.drawLine(line, progress);
+                });
+
+                // Add center point glow when collapsed
+                if (progress < 0.1) {
+                    const targets = [];
+
+                    if (this.mode === 'center' || this.mode === 'wave' || this.mode === 'spiral') {
+                        targets.push({ x: this.canvas.width / 2, y: this.canvas.height / 2 });
+                    } else if (this.mode === 'multipoint') {
+                        const cx = this.canvas.width / 2;
+                        const cy = this.canvas.height / 2;
+                        targets.push(
+                            { x: cx * 0.5, y: cy * 0.5 },
+                            { x: cx * 1.5, y: cy * 0.5 },
+                            { x: cx * 0.5, y: cy * 1.5 },
+                            { x: cx * 1.5, y: cy * 1.5 }
+                        );
+                    } else if (this.mode === 'corners') {
+                        targets.push(
+                            { x: 50, y: 50 },
+                            { x: this.canvas.width - 50, y: 50 },
+                            { x: 50, y: this.canvas.height - 50 },
+                            { x: this.canvas.width - 50, y: this.canvas.height - 50 }
+                        );
+                    }
+
+                    targets.forEach((target, i) => {
+                        const pulse = 0.5 + Math.sin(this.time * 5 + i) * 0.5;
+                        const gradient = this.ctx.createRadialGradient(
+                            target.x, target.y, 0,
+                            target.x, target.y, 30 * pulse
+                        );
+                        gradient.addColorStop(0, `rgba(0, 255, 255, ${0.8 * (1 - progress * 10)})`);
+                        gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.fillRect(
+                            target.x - 30 * pulse,
+                            target.y - 30 * pulse,
+                            60 * pulse,
+                            60 * pulse
+                        );
+                    });
+                }
+            }
+
+            animate() {
+                if (!this.isPaused) {
+                    this.time += 0.016 * this.speed;
+                }
+
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new MatrixCollapse();
+        });
+    </script>
+</body>
+</html>
