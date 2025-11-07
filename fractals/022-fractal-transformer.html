@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>022 - Fractal Transformer | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0014 0%, #1a0a2e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #050510;
+        }
+
+        .canvas-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #aaa;
+            z-index: 5;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #a855f7;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #a855f7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .description strong {
+            color: #ec4899;
+        }
+
+        .stats-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #aaa;
+            z-index: 5;
+            font-family: monospace;
+        }
+
+        .stats-overlay div {
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-overlay span {
+            color: #a855f7;
+            font-weight: bold;
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>022 - Fractal Transformer</h1>
+            <div class="info">November 6, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-grid">
+            <div class="canvas-container full-width">
+                <div class="canvas-label">Full Architecture: Token Flow Through Fractal Attention Layers</div>
+                <div class="stats-overlay" id="mainStats">
+                    <div>Tokens: <span id="tokenCount">8</span></div>
+                    <div>Layers: <span id="layerCount">4</span></div>
+                    <div>Attention Heads: <span id="headCount">4</span></div>
+                    <div>Active Connections: <span id="connectionCount">0</span></div>
+                </div>
+                <canvas id="mainCanvas" width="1400" height="600"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Single Attention Head: Fractal Pattern</div>
+                <canvas id="headCanvas" width="680" height="450"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Self-Attention Matrix Heatmap</div>
+                <canvas id="matrixCanvas" width="680" height="450"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Number of Tokens</label>
+                    <input type="range" id="tokensSlider" min="4" max="16" value="8" step="1">
+                    <div class="value-display" id="tokensValue">8</div>
+                </div>
+                <div class="slider-group">
+                    <label>Transformer Layers</label>
+                    <input type="range" id="layersSlider" min="2" max="8" value="4" step="1">
+                    <div class="value-display" id="layersValue">4</div>
+                </div>
+                <div class="slider-group">
+                    <label>Attention Heads</label>
+                    <input type="range" id="headsSlider" min="2" max="8" value="4" step="1">
+                    <div class="value-display" id="headsValue">4</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Fractal Branching Factor</label>
+                    <input type="range" id="branchSlider" min="2" max="6" value="3" step="1">
+                    <div class="value-display" id="branchValue">3</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Depth</label>
+                    <input type="range" id="depthSlider" min="1" max="4" value="2" step="1">
+                    <div class="value-display" id="depthValue">2</div>
+                </div>
+                <div class="slider-group">
+                    <label>Animation Speed</label>
+                    <input type="range" id="speedSlider" min="0.2" max="3" value="1" step="0.1">
+                    <div class="value-display" id="speedValue">1.0x</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Attention Pattern</label>
+                    <select id="patternSelect">
+                        <option value="full">Full Attention</option>
+                        <option value="causal">Causal (Autoregressive)</option>
+                        <option value="local">Local Window</option>
+                        <option value="sparse">Sparse Fractal</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="resetBtn">Reset Animation</button>
+                <button id="pauseBtn">Pause</button>
+                <button id="newInputBtn">New Input Sequence</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Fractal Transformer Architecture</h2>
+            <p>
+                This visualization reimagines the transformer neural network architecture using <strong>fractal patterns</strong>
+                to represent attention mechanisms. In traditional transformers (like GPT, BERT, or Claude), the self-attention
+                mechanism allows each token to attend to every other token through matrix operations. Here, we visualize
+                this as fractal branching structures where information flows through recursive, self-similar patterns.
+            </p>
+            <p>
+                Each <strong>token</strong> (represented as a colored dot) enters the network and flows through multiple
+                <strong>transformer layers</strong>. In each layer, the multi-head attention mechanism splits the processing
+                into parallel <strong>attention heads</strong>, each forming a unique fractal pattern. These patterns show
+                how tokens interact: connections between tokens represent attention weights, and the fractal structure
+                emerges from the recursive nature of how information propagates through the network.
+            </p>
+            <p>
+                The <strong>fractal branching factor</strong> controls how many sub-branches emerge at each level,
+                mimicking how attention heads divide and process information in parallel. The <strong>fractal depth</strong>
+                represents the hierarchical levels of abstraction - deeper fractals show how transformers build
+                understanding from low-level features to high-level concepts. Different attention patterns (causal,
+                local, sparse) create different fractal topologies, revealing the geometric nature of attention.
+            </p>
+            <p>
+                Watch how tokens (data particles) flow through the network: they enter at the bottom, get processed through
+                each layer's fractal attention patterns, and emerge transformed at the top. The heatmap shows which tokens
+                attend to which others - bright spots indicate strong attention connections, forming the backbone of the
+                fractal structure.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class FractalTransformer {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.headCanvas = document.getElementById('headCanvas');
+                this.headCtx = this.headCanvas.getContext('2d');
+                this.matrixCanvas = document.getElementById('matrixCanvas');
+                this.matrixCtx = this.matrixCanvas.getContext('2d');
+
+                // Parameters
+                this.numTokens = 8;
+                this.numLayers = 4;
+                this.numHeads = 4;
+                this.branchFactor = 3;
+                this.fractalDepth = 2;
+                this.animSpeed = 1.0;
+                this.attentionPattern = 'full';
+
+                // Animation state
+                this.time = 0;
+                this.isPaused = false;
+                this.tokens = [];
+                this.attentionMatrix = [];
+
+                this.initializeTokens();
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('tokensSlider').addEventListener('input', (e) => {
+                    this.numTokens = parseInt(e.target.value);
+                    document.getElementById('tokensValue').textContent = this.numTokens;
+                    document.getElementById('tokenCount').textContent = this.numTokens;
+                    this.initializeTokens();
+                });
+
+                document.getElementById('layersSlider').addEventListener('input', (e) => {
+                    this.numLayers = parseInt(e.target.value);
+                    document.getElementById('layersValue').textContent = this.numLayers;
+                    document.getElementById('layerCount').textContent = this.numLayers;
+                });
+
+                document.getElementById('headsSlider').addEventListener('input', (e) => {
+                    this.numHeads = parseInt(e.target.value);
+                    document.getElementById('headsValue').textContent = this.numHeads;
+                    document.getElementById('headCount').textContent = this.numHeads;
+                });
+
+                document.getElementById('branchSlider').addEventListener('input', (e) => {
+                    this.branchFactor = parseInt(e.target.value);
+                    document.getElementById('branchValue').textContent = this.branchFactor;
+                });
+
+                document.getElementById('depthSlider').addEventListener('input', (e) => {
+                    this.fractalDepth = parseInt(e.target.value);
+                    document.getElementById('depthValue').textContent = this.fractalDepth;
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.animSpeed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = this.animSpeed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('patternSelect').addEventListener('change', (e) => {
+                    this.attentionPattern = e.target.value;
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.time = 0;
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', (e) => {
+                    this.isPaused = !this.isPaused;
+                    e.target.textContent = this.isPaused ? 'Resume' : 'Pause';
+                });
+
+                document.getElementById('newInputBtn').addEventListener('click', () => {
+                    this.initializeTokens();
+                });
+            }
+
+            initializeTokens() {
+                this.tokens = [];
+                for (let i = 0; i < this.numTokens; i++) {
+                    this.tokens.push({
+                        id: i,
+                        hue: (i / this.numTokens) * 360,
+                        embedding: this.randomEmbedding()
+                    });
+                }
+                this.computeAttentionMatrix();
+            }
+
+            randomEmbedding() {
+                const dim = 8;
+                return Array.from({ length: dim }, () => Math.random() * 2 - 1);
+            }
+
+            computeAttentionMatrix() {
+                this.attentionMatrix = [];
+                for (let i = 0; i < this.numTokens; i++) {
+                    const row = [];
+                    for (let j = 0; j < this.numTokens; j++) {
+                        let attention = 0;
+
+                        switch (this.attentionPattern) {
+                            case 'full':
+                                // Dot product similarity
+                                attention = this.dotProduct(this.tokens[i].embedding, this.tokens[j].embedding);
+                                break;
+                            case 'causal':
+                                // Only attend to previous tokens
+                                if (j <= i) {
+                                    attention = this.dotProduct(this.tokens[i].embedding, this.tokens[j].embedding);
+                                }
+                                break;
+                            case 'local':
+                                // Local window of size 3
+                                if (Math.abs(i - j) <= 2) {
+                                    attention = this.dotProduct(this.tokens[i].embedding, this.tokens[j].embedding);
+                                }
+                                break;
+                            case 'sparse':
+                                // Fractal-like sparse pattern
+                                const dist = Math.abs(i - j);
+                                if (dist === 0 || this.isPowerOfTwo(dist) || dist === 1) {
+                                    attention = this.dotProduct(this.tokens[i].embedding, this.tokens[j].embedding);
+                                }
+                                break;
+                        }
+                        row.push(attention);
+                    }
+                    // Softmax normalization
+                    const max = Math.max(...row);
+                    const exp = row.map(x => Math.exp(x - max));
+                    const sum = exp.reduce((a, b) => a + b, 0);
+                    this.attentionMatrix.push(exp.map(x => x / sum));
+                }
+            }
+
+            dotProduct(a, b) {
+                return a.reduce((sum, val, i) => sum + val * b[i], 0);
+            }
+
+            isPowerOfTwo(n) {
+                return n > 0 && (n & (n - 1)) === 0;
+            }
+
+            drawMainArchitecture() {
+                const ctx = this.mainCtx;
+                const width = this.mainCanvas.width;
+                const height = this.mainCanvas.height;
+
+                ctx.fillStyle = '#050510';
+                ctx.fillRect(0, 0, width, height);
+
+                const layerHeight = (height - 100) / (this.numLayers + 1);
+                const tokenSpacing = (width - 100) / (this.numTokens + 1);
+
+                // Draw layer labels
+                ctx.font = '12px monospace';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'right';
+                for (let layer = 0; layer <= this.numLayers; layer++) {
+                    const y = height - 50 - layer * layerHeight;
+                    ctx.fillText(layer === 0 ? 'Input' : `Layer ${layer}`, 40, y + 4);
+                }
+
+                let connectionCount = 0;
+
+                // Draw connections and fractal patterns for each layer
+                for (let layer = 1; layer <= this.numLayers; layer++) {
+                    const y1 = height - 50 - (layer - 1) * layerHeight;
+                    const y2 = height - 50 - layer * layerHeight;
+
+                    // Draw attention patterns between layers
+                    for (let i = 0; i < this.numTokens; i++) {
+                        const x1 = 50 + (i + 1) * tokenSpacing;
+
+                        for (let j = 0; j < this.numTokens; j++) {
+                            const attention = this.attentionMatrix[i][j];
+                            if (attention < 0.1) continue;
+
+                            const x2 = 50 + (j + 1) * tokenSpacing;
+
+                            // Draw fractal connection
+                            this.drawFractalConnection(
+                                ctx, x1, y1, x2, y2,
+                                attention,
+                                this.tokens[i].hue,
+                                layer,
+                                this.fractalDepth
+                            );
+                            connectionCount++;
+                        }
+                    }
+                }
+
+                // Draw tokens at each layer
+                for (let layer = 0; layer <= this.numLayers; layer++) {
+                    const y = height - 50 - layer * layerHeight;
+
+                    for (let i = 0; i < this.numTokens; i++) {
+                        const x = 50 + (i + 1) * tokenSpacing;
+                        const token = this.tokens[i];
+
+                        // Animate token position
+                        const phase = (this.time * this.animSpeed + i * 0.2) % (this.numLayers + 1);
+                        const currentLayer = Math.floor(phase);
+
+                        if (currentLayer === layer) {
+                            const pulse = 0.7 + Math.sin(this.time * 3 + i) * 0.3;
+
+                            // Draw token glow
+                            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 15 * pulse);
+                            gradient.addColorStop(0, `hsla(${token.hue}, 100%, 60%, 0.8)`);
+                            gradient.addColorStop(1, `hsla(${token.hue}, 100%, 60%, 0)`);
+                            ctx.fillStyle = gradient;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 15 * pulse, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Draw token core
+                            ctx.fillStyle = `hsl(${token.hue}, 100%, 60%)`;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+
+                document.getElementById('connectionCount').textContent = connectionCount;
+            }
+
+            drawFractalConnection(ctx, x1, y1, x2, y2, strength, hue, layer, depth) {
+                if (depth <= 0 || strength < 0.05) {
+                    // Base case: draw simple line
+                    ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${strength * 0.3})`;
+                    ctx.lineWidth = strength * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    return;
+                }
+
+                // Recursive case: create fractal branches
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+
+                // Add some randomness based on layer and time
+                const offset = Math.sin(this.time * 0.5 + layer + hue * 0.01) * 20;
+                const branchMidX = midX + offset;
+                const branchMidY = midY - Math.abs(offset);
+
+                ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${strength * 0.4})`;
+                ctx.lineWidth = strength * 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(branchMidX, branchMidY);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // Create sub-branches
+                const branchCount = Math.min(this.branchFactor, 3);
+                for (let i = 0; i < branchCount; i++) {
+                    const t = (i + 1) / (branchCount + 1);
+                    const bx1 = x1 + (branchMidX - x1) * t;
+                    const by1 = y1 + (branchMidY - y1) * t;
+                    const bx2 = branchMidX + (x2 - branchMidX) * t;
+                    const by2 = branchMidY + (y2 - branchMidY) * t;
+
+                    this.drawFractalConnection(
+                        ctx, bx1, by1, bx2, by2,
+                        strength * 0.6, hue + i * 20, layer, depth - 1
+                    );
+                }
+            }
+
+            drawSingleAttentionHead() {
+                const ctx = this.headCtx;
+                const width = this.headCanvas.width;
+                const height = this.headCanvas.height;
+
+                ctx.fillStyle = '#050510';
+                ctx.fillRect(0, 0, width, height);
+
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) * 0.35;
+
+                // Draw tokens in a circle
+                const angleStep = (Math.PI * 2) / this.numTokens;
+                const positions = [];
+
+                for (let i = 0; i < this.numTokens; i++) {
+                    const angle = i * angleStep - Math.PI / 2;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+                    positions.push({ x, y });
+                }
+
+                // Draw fractal attention connections
+                for (let i = 0; i < this.numTokens; i++) {
+                    for (let j = 0; j < this.numTokens; j++) {
+                        const attention = this.attentionMatrix[i][j];
+                        if (attention < 0.1) continue;
+
+                        this.drawFractalAttentionPattern(
+                            ctx,
+                            positions[i].x, positions[i].y,
+                            positions[j].x, positions[j].y,
+                            attention,
+                            this.tokens[i].hue,
+                            centerX, centerY
+                        );
+                    }
+                }
+
+                // Draw token nodes
+                for (let i = 0; i < this.numTokens; i++) {
+                    const token = this.tokens[i];
+                    const pos = positions[i];
+                    const pulse = 0.8 + Math.sin(this.time * 2 + i * 0.5) * 0.2;
+
+                    // Glow
+                    const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 20 * pulse);
+                    gradient.addColorStop(0, `hsla(${token.hue}, 100%, 60%, 0.6)`);
+                    gradient.addColorStop(1, `hsla(${token.hue}, 100%, 60%, 0)`);
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 20 * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Core
+                    ctx.fillStyle = `hsl(${token.hue}, 100%, 60%)`;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Label
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(i.toString(), pos.x, pos.y);
+                }
+            }
+
+            drawFractalAttentionPattern(ctx, x1, y1, x2, y2, strength, hue, cx, cy) {
+                // Draw connection that curves toward center, creating fractal-like patterns
+                const controlX = cx + (Math.random() - 0.5) * 50;
+                const controlY = cy + (Math.random() - 0.5) * 50;
+
+                ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${strength * 0.4})`;
+                ctx.lineWidth = strength * 3;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.quadraticCurveTo(controlX, controlY, x2, y2);
+                ctx.stroke();
+
+                // Add particle flowing along the path
+                const t = (this.time * this.animSpeed * 0.5) % 1;
+                const px = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * controlX + t * t * x2;
+                const py = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * controlY + t * t * y2;
+
+                ctx.fillStyle = `hsla(${hue}, 100%, 70%, ${strength})`;
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawAttentionMatrix() {
+                const ctx = this.matrixCtx;
+                const width = this.matrixCanvas.width;
+                const height = this.matrixCanvas.height;
+
+                ctx.fillStyle = '#050510';
+                ctx.fillRect(0, 0, width, height);
+
+                const padding = 60;
+                const cellSize = (Math.min(width, height) - 2 * padding) / this.numTokens;
+
+                // Draw matrix cells
+                for (let i = 0; i < this.numTokens; i++) {
+                    for (let j = 0; j < this.numTokens; j++) {
+                        const attention = this.attentionMatrix[i][j];
+                        const x = padding + j * cellSize;
+                        const y = padding + i * cellSize;
+
+                        // Color based on attention value
+                        const intensity = Math.floor(attention * 255);
+                        ctx.fillStyle = `rgb(${intensity}, ${intensity * 0.5}, ${intensity * 1.5})`;
+                        ctx.fillRect(x, y, cellSize - 1, cellSize - 1);
+
+                        // Draw value if significant
+                        if (attention > 0.1) {
+                            ctx.fillStyle = attention > 0.5 ? '#000' : '#fff';
+                            ctx.font = `${Math.min(12, cellSize * 0.4)}px monospace`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(
+                                attention.toFixed(2),
+                                x + cellSize / 2,
+                                y + cellSize / 2
+                            );
+                        }
+                    }
+                }
+
+                // Draw labels
+                ctx.fillStyle = '#aaa';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                for (let i = 0; i < this.numTokens; i++) {
+                    const x = padding + i * cellSize + cellSize / 2;
+                    const y = padding + i * cellSize + cellSize / 2;
+
+                    // Top labels (Query)
+                    ctx.fillText(i.toString(), x, padding - 20);
+                    // Left labels (Key)
+                    ctx.textAlign = 'right';
+                    ctx.fillText(i.toString(), padding - 10, y);
+                    ctx.textAlign = 'center';
+                }
+
+                // Axis labels
+                ctx.fillStyle = '#888';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText('Query →', width / 2, 20);
+                ctx.save();
+                ctx.translate(15, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Key →', 0, 0);
+                ctx.restore();
+            }
+
+            animate() {
+                if (!this.isPaused) {
+                    this.time += 0.016;
+                }
+
+                this.drawMainArchitecture();
+                this.drawSingleAttentionHead();
+                this.drawAttentionMatrix();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new FractalTransformer();
+        });
+    </script>
+</body>
+</html>
