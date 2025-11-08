@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>023 - Quantum Leap | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(100, 200, 255, 0.2);
+            background: radial-gradient(circle at center, #000814 0%, #000000 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(100, 200, 255, 0.05);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #64c8ff;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #64c8ff;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #64c8ff 0%, #9d50ff 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(100, 200, 255, 0.5);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1200px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(100, 200, 255, 0.05);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #64c8ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .description strong {
+            color: #9d50ff;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #aaa;
+            z-index: 5;
+            font-family: monospace;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .stats-panel div {
+            margin-bottom: 0.4rem;
+        }
+
+        .stats-panel .label {
+            color: #888;
+        }
+
+        .stats-panel .value {
+            color: #64c8ff;
+            font-weight: bold;
+        }
+
+        .quantum-state {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #9d50ff;
+            z-index: 5;
+            font-family: monospace;
+            border: 1px solid rgba(157, 80, 255, 0.3);
+            font-weight: bold;
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #aaa;
+            z-index: 5;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>023 - Quantum Leap</h1>
+            <div class="info">November 7, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="1200" height="800"></canvas>
+            <div class="stats-panel">
+                <div><span class="label">Active Particles:</span> <span class="value" id="particleCount">0</span></div>
+                <div><span class="label">Quantum Leaps:</span> <span class="value" id="leapCount">0</span></div>
+                <div><span class="label">Tunneling Events:</span> <span class="value" id="tunnelCount">0</span></div>
+                <div><span class="label">Superposition:</span> <span class="value" id="superpositionCount">0</span></div>
+            </div>
+            <div class="quantum-state" id="quantumState">SUPERPOSITION</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffd700;"></div>
+                    <span>Sun</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #64c8ff;"></div>
+                    <span>Quantum Particle</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9d50ff;"></div>
+                    <span>Probability Cloud</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff88;"></div>
+                    <span>Tunneling Path</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Number of Particles</label>
+                    <input type="range" id="particlesSlider" min="10" max="200" value="50" step="10">
+                    <div class="value-display" id="particlesValue">50</div>
+                </div>
+                <div class="slider-group">
+                    <label>Leap Frequency</label>
+                    <input type="range" id="leapFreqSlider" min="0.1" max="5" value="1" step="0.1">
+                    <div class="value-display" id="leapFreqValue">1.0 /s</div>
+                </div>
+                <div class="slider-group">
+                    <label>Quantum Uncertainty</label>
+                    <input type="range" id="uncertaintySlider" min="0" max="1" value="0.5" step="0.05">
+                    <div class="value-display" id="uncertaintyValue">0.50</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Number of Planets</label>
+                    <input type="range" id="planetsSlider" min="3" max="12" value="8" step="1">
+                    <div class="value-display" id="planetsValue">8</div>
+                </div>
+                <div class="slider-group">
+                    <label>Orbital Speed</label>
+                    <input type="range" id="orbitSpeedSlider" min="0" max="3" value="0.5" step="0.1">
+                    <div class="value-display" id="orbitSpeedValue">0.5x</div>
+                </div>
+                <div class="slider-group">
+                    <label>Quantum Effect</label>
+                    <select id="effectSelect">
+                        <option value="tunneling">Quantum Tunneling</option>
+                        <option value="superposition">Superposition</option>
+                        <option value="entanglement">Entanglement</option>
+                        <option value="teleportation">Quantum Teleportation</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="resetBtn">Reset Simulation</button>
+                <button id="pauseBtn">Pause</button>
+                <button id="collapseBtn">Collapse Wave Function</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Quantum Mechanics Across the Cosmos</h2>
+            <p>
+                This visualization demonstrates <strong>quantum mechanical phenomena</strong> at a cosmic scale,
+                showing particles performing quantum leaps between planetary orbits in a solar system. While quantum
+                effects are typically observed at atomic scales, this artistic interpretation scales them up to
+                help visualize the bizarre nature of quantum mechanics.
+            </p>
+            <p>
+                <strong>Quantum Tunneling:</strong> Particles can "tunnel" through the classical barriers of orbital
+                mechanics, appearing at different orbital distances without traversing the space in between. Watch as
+                particles instantaneously jump from one orbit to another, defying classical physics.
+            </p>
+            <p>
+                <strong>Superposition:</strong> Before measurement (observation), particles exist in multiple states
+                simultaneously - shown here as probability clouds spread across multiple possible positions. The particle
+                doesn't have a definite location until the wave function collapses.
+            </p>
+            <p>
+                <strong>Quantum Entanglement:</strong> Pairs of particles become correlated such that measuring one
+                instantly affects the other, regardless of distance. Watch entangled particles leap together in perfect
+                synchronization across the solar system.
+            </p>
+            <p>
+                <strong>Quantum Teleportation:</strong> Particles appear to teleport from one location to another via
+                quantum state transfer, creating dramatic leaps across vast orbital distances. The quantum uncertainty
+                parameter controls how spread out the probability distributions are before collapse.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class QuantumLeap {
+            constructor() {
+                this.canvas = document.getElementById('mainCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                // Parameters
+                this.numParticles = 50;
+                this.leapFrequency = 1.0;
+                this.uncertainty = 0.5;
+                this.numPlanets = 8;
+                this.orbitSpeed = 0.5;
+                this.quantumEffect = 'tunneling';
+
+                // State
+                this.time = 0;
+                this.isPaused = false;
+                this.particles = [];
+                this.planets = [];
+                this.leapCount = 0;
+                this.tunnelCount = 0;
+                this.superpositionCount = 0;
+
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+
+                this.initializePlanets();
+                this.initializeParticles();
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('particlesSlider').addEventListener('input', (e) => {
+                    this.numParticles = parseInt(e.target.value);
+                    document.getElementById('particlesValue').textContent = this.numParticles;
+                    this.initializeParticles();
+                });
+
+                document.getElementById('leapFreqSlider').addEventListener('input', (e) => {
+                    this.leapFrequency = parseFloat(e.target.value);
+                    document.getElementById('leapFreqValue').textContent = this.leapFrequency.toFixed(1) + ' /s';
+                });
+
+                document.getElementById('uncertaintySlider').addEventListener('input', (e) => {
+                    this.uncertainty = parseFloat(e.target.value);
+                    document.getElementById('uncertaintyValue').textContent = this.uncertainty.toFixed(2);
+                });
+
+                document.getElementById('planetsSlider').addEventListener('input', (e) => {
+                    this.numPlanets = parseInt(e.target.value);
+                    document.getElementById('planetsValue').textContent = this.numPlanets;
+                    this.initializePlanets();
+                });
+
+                document.getElementById('orbitSpeedSlider').addEventListener('input', (e) => {
+                    this.orbitSpeed = parseFloat(e.target.value);
+                    document.getElementById('orbitSpeedValue').textContent = this.orbitSpeed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('effectSelect').addEventListener('change', (e) => {
+                    this.quantumEffect = e.target.value;
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.leapCount = 0;
+                    this.tunnelCount = 0;
+                    this.superpositionCount = 0;
+                    this.time = 0;
+                    this.initializeParticles();
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', (e) => {
+                    this.isPaused = !this.isPaused;
+                    e.target.textContent = this.isPaused ? 'Resume' : 'Pause';
+                });
+
+                document.getElementById('collapseBtn').addEventListener('click', () => {
+                    this.collapseAllWaveFunctions();
+                });
+            }
+
+            initializePlanets() {
+                this.planets = [];
+                const baseRadius = 60;
+                const radiusStep = 50;
+
+                for (let i = 0; i < this.numPlanets; i++) {
+                    const orbitRadius = baseRadius + i * radiusStep;
+                    const size = 3 + Math.random() * 4;
+                    const speed = 0.3 / (i + 1);
+                    const hue = (i / this.numPlanets) * 360;
+
+                    this.planets.push({
+                        orbitRadius,
+                        angle: Math.random() * Math.PI * 2,
+                        size,
+                        speed,
+                        hue
+                    });
+                }
+            }
+
+            initializeParticles() {
+                this.particles = [];
+                for (let i = 0; i < this.numParticles; i++) {
+                    this.particles.push(this.createParticle());
+                }
+            }
+
+            createParticle() {
+                const orbitIndex = Math.floor(Math.random() * this.numPlanets);
+                const orbit = this.planets[orbitIndex];
+
+                return {
+                    orbitIndex,
+                    angle: Math.random() * Math.PI * 2,
+                    phase: Math.random() * Math.PI * 2,
+                    inSuperposition: Math.random() < 0.3,
+                    superpositionOrbits: [orbitIndex, (orbitIndex + 1) % this.numPlanets],
+                    lastLeap: 0,
+                    entangledWith: -1,
+                    tunneling: false,
+                    tunnelProgress: 0,
+                    tunnelFrom: orbitIndex,
+                    tunnelTo: orbitIndex
+                };
+            }
+
+            collapseAllWaveFunctions() {
+                this.particles.forEach(p => {
+                    if (p.inSuperposition) {
+                        p.orbitIndex = p.superpositionOrbits[Math.floor(Math.random() * p.superpositionOrbits.length)];
+                        p.inSuperposition = false;
+                    }
+                });
+            }
+
+            updateParticle(particle, dt) {
+                // Update orbital position
+                particle.angle += 0.3 * dt;
+                particle.phase += 2 * dt;
+
+                // Quantum leap logic
+                const timeSinceLastLeap = this.time - particle.lastLeap;
+                const leapProbability = this.leapFrequency * dt;
+
+                if (Math.random() < leapProbability && timeSinceLastLeap > 0.5) {
+                    this.performQuantumLeap(particle);
+                }
+
+                // Update tunneling animation
+                if (particle.tunneling) {
+                    particle.tunnelProgress += dt * 2;
+                    if (particle.tunnelProgress >= 1) {
+                        particle.tunneling = false;
+                        particle.orbitIndex = particle.tunnelTo;
+                        this.tunnelCount++;
+                    }
+                }
+            }
+
+            performQuantumLeap(particle) {
+                this.leapCount++;
+                particle.lastLeap = this.time;
+
+                switch (this.quantumEffect) {
+                    case 'tunneling':
+                        // Tunnel to a random orbit
+                        particle.tunneling = true;
+                        particle.tunnelProgress = 0;
+                        particle.tunnelFrom = particle.orbitIndex;
+                        particle.tunnelTo = Math.floor(Math.random() * this.numPlanets);
+                        break;
+
+                    case 'superposition':
+                        // Enter superposition across multiple orbits
+                        particle.inSuperposition = true;
+                        const numStates = 2 + Math.floor(Math.random() * 3);
+                        particle.superpositionOrbits = [];
+                        for (let i = 0; i < numStates; i++) {
+                            particle.superpositionOrbits.push(Math.floor(Math.random() * this.numPlanets));
+                        }
+                        this.superpositionCount++;
+                        break;
+
+                    case 'entanglement':
+                        // Create entangled pair
+                        const partner = this.particles[Math.floor(Math.random() * this.particles.length)];
+                        const newOrbit = Math.floor(Math.random() * this.numPlanets);
+                        particle.orbitIndex = newOrbit;
+                        partner.orbitIndex = (newOrbit + Math.floor(this.numPlanets / 2)) % this.numPlanets;
+                        particle.entangledWith = this.particles.indexOf(partner);
+                        partner.entangledWith = this.particles.indexOf(particle);
+                        break;
+
+                    case 'teleportation':
+                        // Instant teleportation with uncertainty
+                        particle.orbitIndex = Math.floor(Math.random() * this.numPlanets);
+                        particle.angle = Math.random() * Math.PI * 2;
+                        break;
+                }
+            }
+
+            drawPlanet(planet) {
+                // Update angle
+                planet.angle += planet.speed * this.orbitSpeed * 0.016;
+
+                const x = this.centerX + Math.cos(planet.angle) * planet.orbitRadius;
+                const y = this.centerY + Math.sin(planet.angle) * planet.orbitRadius;
+
+                // Draw orbit
+                this.ctx.strokeStyle = `hsla(${planet.hue}, 50%, 50%, 0.15)`;
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, planet.orbitRadius, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                // Draw planet
+                const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, planet.size * 2);
+                gradient.addColorStop(0, `hsla(${planet.hue}, 70%, 60%, 0.8)`);
+                gradient.addColorStop(1, `hsla(${planet.hue}, 70%, 40%, 0)`);
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, planet.size * 2, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = `hsl(${planet.hue}, 70%, 60%)`;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, planet.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            drawParticle(particle) {
+                if (particle.inSuperposition) {
+                    // Draw probability cloud across all superposition states
+                    particle.superpositionOrbits.forEach((orbitIdx, i) => {
+                        const orbit = this.planets[orbitIdx];
+                        const numGhosts = 8;
+
+                        for (let g = 0; g < numGhosts; g++) {
+                            const ghostAngle = particle.angle + (g / numGhosts) * Math.PI * 2;
+                            const x = this.centerX + Math.cos(ghostAngle) * orbit.orbitRadius;
+                            const y = this.centerY + Math.sin(ghostAngle) * orbit.orbitRadius;
+
+                            const alpha = 0.1 + 0.1 * Math.sin(particle.phase + g);
+                            const size = 3 + 2 * Math.sin(particle.phase + g * 0.5);
+
+                            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, size * 3);
+                            gradient.addColorStop(0, `rgba(157, 80, 255, ${alpha})`);
+                            gradient.addColorStop(1, 'rgba(157, 80, 255, 0)');
+
+                            this.ctx.fillStyle = gradient;
+                            this.ctx.beginPath();
+                            this.ctx.arc(x, y, size * 3, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                    });
+                } else if (particle.tunneling) {
+                    // Draw tunneling path
+                    const fromOrbit = this.planets[particle.tunnelFrom];
+                    const toOrbit = this.planets[particle.tunnelTo];
+
+                    const t = particle.tunnelProgress;
+                    const currentRadius = fromOrbit.orbitRadius + (toOrbit.orbitRadius - fromOrbit.orbitRadius) * t;
+
+                    const x = this.centerX + Math.cos(particle.angle) * currentRadius;
+                    const y = this.centerY + Math.sin(particle.angle) * currentRadius;
+
+                    // Tunneling trail
+                    const trailLength = 20;
+                    for (let i = 0; i < trailLength; i++) {
+                        const trailT = Math.max(0, t - i * 0.02);
+                        const trailRadius = fromOrbit.orbitRadius + (toOrbit.orbitRadius - fromOrbit.orbitRadius) * trailT;
+                        const tx = this.centerX + Math.cos(particle.angle) * trailRadius;
+                        const ty = this.centerY + Math.sin(particle.angle) * trailRadius;
+
+                        const alpha = (1 - i / trailLength) * 0.5;
+                        this.ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(tx, ty, 2, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+
+                    // Current position
+                    const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, 8);
+                    gradient.addColorStop(0, 'rgba(0, 255, 136, 1)');
+                    gradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                } else {
+                    // Normal particle
+                    const orbit = this.planets[particle.orbitIndex];
+
+                    // Add uncertainty spread
+                    const spread = this.uncertainty * 20;
+                    const offsetX = (Math.sin(particle.phase) * spread);
+                    const offsetY = (Math.cos(particle.phase * 1.3) * spread);
+
+                    const x = this.centerX + Math.cos(particle.angle) * orbit.orbitRadius + offsetX;
+                    const y = this.centerY + Math.sin(particle.angle) * orbit.orbitRadius + offsetY;
+
+                    // Glow
+                    const pulse = 0.7 + 0.3 * Math.sin(particle.phase);
+                    const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, 6 * pulse);
+                    gradient.addColorStop(0, `rgba(100, 200, 255, ${0.8 * pulse})`);
+                    gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 6 * pulse, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Core
+                    this.ctx.fillStyle = '#64c8ff';
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+
+            draw() {
+                // Clear with fade effect
+                this.ctx.fillStyle = 'rgba(0, 8, 20, 0.3)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw stars background
+                if (this.time < 0.1) {
+                    for (let i = 0; i < 200; i++) {
+                        const x = Math.random() * this.canvas.width;
+                        const y = Math.random() * this.canvas.height;
+                        const size = Math.random() * 1.5;
+                        this.ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+                        this.ctx.fillRect(x, y, size, size);
+                    }
+                }
+
+                // Draw sun at center
+                const sunGradient = this.ctx.createRadialGradient(
+                    this.centerX, this.centerY, 0,
+                    this.centerX, this.centerY, 30
+                );
+                sunGradient.addColorStop(0, 'rgba(255, 215, 0, 1)');
+                sunGradient.addColorStop(0.5, 'rgba(255, 140, 0, 0.8)');
+                sunGradient.addColorStop(1, 'rgba(255, 69, 0, 0)');
+
+                this.ctx.fillStyle = sunGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, 30, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = '#ffd700';
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, 15, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Draw planets and orbits
+                this.planets.forEach(planet => this.drawPlanet(planet));
+
+                // Draw particles
+                this.particles.forEach(particle => this.drawParticle(particle));
+
+                // Update stats
+                document.getElementById('particleCount').textContent = this.particles.length;
+                document.getElementById('leapCount').textContent = this.leapCount;
+                document.getElementById('tunnelCount').textContent = this.tunnelCount;
+                document.getElementById('superpositionCount').textContent = this.superpositionCount;
+
+                // Update quantum state display
+                const stateEl = document.getElementById('quantumState');
+                const superpositionParticles = this.particles.filter(p => p.inSuperposition).length;
+                const tunnelingParticles = this.particles.filter(p => p.tunneling).length;
+
+                if (superpositionParticles > this.particles.length * 0.3) {
+                    stateEl.textContent = 'SUPERPOSITION DOMINANT';
+                    stateEl.style.color = '#9d50ff';
+                } else if (tunnelingParticles > 5) {
+                    stateEl.textContent = 'TUNNELING ACTIVE';
+                    stateEl.style.color = '#00ff88';
+                } else {
+                    stateEl.textContent = 'QUANTUM FLUCTUATION';
+                    stateEl.style.color = '#64c8ff';
+                }
+            }
+
+            animate() {
+                if (!this.isPaused) {
+                    const dt = 0.016;
+                    this.time += dt;
+
+                    this.particles.forEach(particle => {
+                        this.updateParticle(particle, dt);
+                    });
+                }
+
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new QuantumLeap();
+        });
+    </script>
+</body>
+</html>
