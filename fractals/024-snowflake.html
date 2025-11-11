@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>024 - Snowflake | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a2845 50%, #2a3f5f 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(10, 22, 40, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #ccc;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+            position: relative;
+        }
+
+        #snowfall {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(200, 230, 255, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(150, 200, 255, 0.2);
+            background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, rgba(10,22,40,0.8) 100%);
+        }
+
+        .canvas-container.main {
+            grid-column: 1 / -1;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(10,22,40,0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #aaa;
+            z-index: 5;
+            border: 1px solid rgba(200, 230, 255, 0.2);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(10, 22, 40, 0.6);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(200, 230, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #87ceeb;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #87ceeb;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%);
+            color: #0a1628;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(135, 206, 235, 0.5);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(10, 22, 40, 0.6);
+            border-radius: 8px;
+            line-height: 1.6;
+            border: 1px solid rgba(200, 230, 255, 0.2);
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #87ceeb;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #ccc;
+        }
+
+        .description strong {
+            color: #b0e0e6;
+        }
+
+        select {
+            background: rgba(10, 22, 40, 0.8);
+            color: white;
+            border: 1px solid rgba(200, 230, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: rgba(10, 22, 40, 0.95);
+        }
+
+        .stats-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(10,22,40,0.9);
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #aaa;
+            z-index: 5;
+            font-family: monospace;
+            border: 1px solid rgba(200, 230, 255, 0.2);
+        }
+
+        .stats-overlay div {
+            margin-bottom: 0.2rem;
+        }
+
+        .stats-overlay .value {
+            color: #87ceeb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snowfall"></canvas>
+
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>024 - Snowflake</h1>
+            <div class="info">November 10, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-grid">
+            <div class="canvas-container main">
+                <div class="canvas-label">Interactive Koch Snowflake</div>
+                <canvas id="mainCanvas" width="1400" height="700"></canvas>
+                <div class="stats-overlay">
+                    <div>Segments: <span class="value" id="segmentCount">0</span></div>
+                    <div>Perimeter Ratio: <span class="value" id="perimeterRatio">1.00</span></div>
+                    <div>Area Ratio: <span class="value" id="areaRatio">1.00</span></div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Snowflake Variations</div>
+                <canvas id="variationsCanvas" width="680" height="450"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Growth Animation</div>
+                <canvas id="animationCanvas" width="680" height="450"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Iterations</label>
+                    <input type="range" id="iterationsSlider" min="0" max="6" value="4" step="1">
+                    <div class="value-display" id="iterationsValue">4</div>
+                </div>
+                <div class="slider-group">
+                    <label>Symmetry (Arms)</label>
+                    <input type="range" id="symmetrySlider" min="3" max="12" value="6" step="1">
+                    <div class="value-display" id="symmetryValue">6</div>
+                </div>
+                <div class="slider-group">
+                    <label>Angle Variation (degrees)</label>
+                    <input type="range" id="angleSlider" min="0" max="90" value="60" step="5">
+                    <div class="value-display" id="angleValue">60°</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Branch Length Ratio</label>
+                    <input type="range" id="lengthSlider" min="0.2" max="0.5" value="0.333" step="0.001">
+                    <div class="value-display" id="lengthValue">0.333</div>
+                </div>
+                <div class="slider-group">
+                    <label>Rotation Speed</label>
+                    <input type="range" id="rotationSlider" min="0" max="2" value="0.2" step="0.1">
+                    <div class="value-display" id="rotationValue">0.2x</div>
+                </div>
+                <div class="slider-group">
+                    <label>Snowflake Type</label>
+                    <select id="typeSelect">
+                        <option value="koch">Classic Koch</option>
+                        <option value="dendritic">Dendritic (Tree-like)</option>
+                        <option value="stellar">Stellar Plates</option>
+                        <option value="fern">Fern-like</option>
+                        <option value="hexagonal">Hexagonal Prism</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Snowfall Intensity</label>
+                    <input type="range" id="snowfallSlider" min="0" max="500" value="100" step="10">
+                    <div class="value-display" id="snowfallValue">100</div>
+                </div>
+                <div class="slider-group">
+                    <label>Color Scheme</label>
+                    <select id="colorSelect">
+                        <option value="ice">Ice Blue</option>
+                        <option value="frost">Frost White</option>
+                        <option value="aurora">Aurora</option>
+                        <option value="rainbow">Rainbow</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="animateBtn">Animate Growth</button>
+                <button id="randomBtn">Random Snowflake</button>
+                <button id="downloadBtn">Download Image</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>The Mathematics of Snowflakes</h2>
+            <p>
+                Snowflakes are nature's perfect example of fractals - patterns that repeat at different scales.
+                The <strong>Koch snowflake</strong>, discovered by Swedish mathematician Helge von Koch in 1904,
+                is one of the earliest described fractal curves. It demonstrates a fascinating paradox: with each
+                iteration, the perimeter increases by 4/3, approaching infinity, while the area converges to 8/5
+                of the original triangle.
+            </p>
+            <p>
+                Real snowflakes form through a process called <strong>dendritic crystal growth</strong>. As water
+                vapor freezes onto a tiny ice crystal, it creates six-fold symmetry due to the hexagonal structure
+                of ice molecules. The exact shape depends on temperature and humidity - warmer temperatures create
+                plate-like structures, while colder temperatures favor stellar dendrites with intricate branches.
+            </p>
+            <p>
+                This visualization lets you explore different <strong>fractal snowflake patterns</strong>. Adjust
+                the iterations to see how complexity emerges from simple rules, change the symmetry to create
+                different crystal structures, and modify the angles to see how small changes create dramatically
+                different forms. Each snowflake is unique, yet all follow the same mathematical principles -
+                just like in nature.
+            </p>
+            <p>
+                The <strong>self-similar</strong> nature of fractals means that zooming into any part reveals
+                patterns similar to the whole. This property creates infinite detail from finite instructions,
+                making fractals both beautiful and mathematically profound.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class SnowflakeFractal {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.variationsCanvas = document.getElementById('variationsCanvas');
+                this.variationsCtx = this.variationsCanvas.getContext('2d');
+                this.animationCanvas = document.getElementById('animationCanvas');
+                this.animationCtx = this.animationCanvas.getContext('2d');
+                this.snowfallCanvas = document.getElementById('snowfall');
+                this.snowfallCtx = this.snowfallCanvas.getContext('2d');
+
+                // Parameters
+                this.iterations = 4;
+                this.symmetry = 6;
+                this.angle = 60;
+                this.lengthRatio = 0.333;
+                this.rotationSpeed = 0.2;
+                this.type = 'koch';
+                this.colorScheme = 'ice';
+                this.snowfallIntensity = 100;
+
+                // Animation state
+                this.time = 0;
+                this.rotation = 0;
+                this.animateGrowth = false;
+                this.growthProgress = 0;
+
+                // Snowfall
+                this.snowflakes = [];
+                this.initializeSnowfall();
+
+                this.setupEventListeners();
+                this.resizeSnowfall();
+                window.addEventListener('resize', () => this.resizeSnowfall());
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('iterationsSlider').addEventListener('input', (e) => {
+                    this.iterations = parseInt(e.target.value);
+                    document.getElementById('iterationsValue').textContent = this.iterations;
+                    this.drawAll();
+                });
+
+                document.getElementById('symmetrySlider').addEventListener('input', (e) => {
+                    this.symmetry = parseInt(e.target.value);
+                    document.getElementById('symmetryValue').textContent = this.symmetry;
+                    this.drawAll();
+                });
+
+                document.getElementById('angleSlider').addEventListener('input', (e) => {
+                    this.angle = parseInt(e.target.value);
+                    document.getElementById('angleValue').textContent = this.angle + '°';
+                    this.drawAll();
+                });
+
+                document.getElementById('lengthSlider').addEventListener('input', (e) => {
+                    this.lengthRatio = parseFloat(e.target.value);
+                    document.getElementById('lengthValue').textContent = this.lengthRatio.toFixed(3);
+                    this.drawAll();
+                });
+
+                document.getElementById('rotationSlider').addEventListener('input', (e) => {
+                    this.rotationSpeed = parseFloat(e.target.value);
+                    document.getElementById('rotationValue').textContent = this.rotationSpeed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('typeSelect').addEventListener('change', (e) => {
+                    this.type = e.target.value;
+                    this.drawAll();
+                });
+
+                document.getElementById('colorSelect').addEventListener('change', (e) => {
+                    this.colorScheme = e.target.value;
+                    this.drawAll();
+                });
+
+                document.getElementById('snowfallSlider').addEventListener('input', (e) => {
+                    this.snowfallIntensity = parseInt(e.target.value);
+                    document.getElementById('snowfallValue').textContent = this.snowfallIntensity;
+                    this.initializeSnowfall();
+                });
+
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.animateGrowth = true;
+                    this.growthProgress = 0;
+                });
+
+                document.getElementById('randomBtn').addEventListener('click', () => {
+                    this.randomize();
+                });
+
+                document.getElementById('downloadBtn').addEventListener('click', () => {
+                    this.download();
+                });
+            }
+
+            randomize() {
+                this.iterations = Math.floor(Math.random() * 5) + 2;
+                this.symmetry = [3, 4, 5, 6, 8, 12][Math.floor(Math.random() * 6)];
+                this.angle = Math.floor(Math.random() * 18) * 5 + 30;
+                this.lengthRatio = 0.2 + Math.random() * 0.3;
+
+                document.getElementById('iterationsSlider').value = this.iterations;
+                document.getElementById('iterationsValue').textContent = this.iterations;
+                document.getElementById('symmetrySlider').value = this.symmetry;
+                document.getElementById('symmetryValue').textContent = this.symmetry;
+                document.getElementById('angleSlider').value = this.angle;
+                document.getElementById('angleValue').textContent = this.angle + '°';
+                document.getElementById('lengthSlider').value = this.lengthRatio;
+                document.getElementById('lengthValue').textContent = this.lengthRatio.toFixed(3);
+
+                this.drawAll();
+            }
+
+            download() {
+                const link = document.createElement('a');
+                link.download = 'snowflake-fractal.png';
+                link.href = this.mainCanvas.toDataURL();
+                link.click();
+            }
+
+            getColor(t = 0) {
+                switch (this.colorScheme) {
+                    case 'ice':
+                        return `rgba(135, 206, 235, ${0.8 + 0.2 * Math.sin(t)})`;
+                    case 'frost':
+                        return `rgba(240, 248, 255, ${0.9 + 0.1 * Math.sin(t)})`;
+                    case 'aurora':
+                        const hue = (t * 100) % 360;
+                        return `hsla(${hue}, 70%, 70%, 0.8)`;
+                    case 'rainbow':
+                        const rainbowHue = (t * 360) % 360;
+                        return `hsla(${rainbowHue}, 80%, 65%, 0.8)`;
+                }
+            }
+
+            drawKochSegment(ctx, x1, y1, x2, y2, depth) {
+                if (depth === 0) {
+                    ctx.lineTo(x2, y2);
+                    return;
+                }
+
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+
+                // Three division points
+                const x3 = x1 + dx / 3;
+                const y3 = y1 + dy / 3;
+                const x5 = x1 + 2 * dx / 3;
+                const y5 = y1 + 2 * dy / 3;
+
+                // Peak point
+                const angleRad = (this.angle * Math.PI) / 180;
+                const x4 = x3 + (x5 - x3) * Math.cos(angleRad) - (y5 - y3) * Math.sin(angleRad);
+                const y4 = y3 + (x5 - x3) * Math.sin(angleRad) + (y5 - y3) * Math.cos(angleRad);
+
+                this.drawKochSegment(ctx, x1, y1, x3, y3, depth - 1);
+                this.drawKochSegment(ctx, x3, y3, x4, y4, depth - 1);
+                this.drawKochSegment(ctx, x4, y4, x5, y5, depth - 1);
+                this.drawKochSegment(ctx, x5, y5, x2, y2, depth - 1);
+            }
+
+            drawDendriticBranch(ctx, x, y, length, angle, depth) {
+                if (depth === 0 || length < 1) return;
+
+                const x2 = x + Math.cos(angle) * length;
+                const y2 = y + Math.sin(angle) * length;
+
+                ctx.moveTo(x, y);
+                ctx.lineTo(x2, y2);
+
+                const newLength = length * this.lengthRatio;
+                const branches = 2;
+
+                for (let i = 0; i < branches; i++) {
+                    const branchAngle = this.angle * Math.PI / 180;
+                    const newAngle = i === 0 ? angle - branchAngle : angle + branchAngle;
+                    this.drawDendriticBranch(ctx, x2, y2, newLength, newAngle, depth - 1);
+                }
+            }
+
+            drawSnowflake(ctx, centerX, centerY, radius, iterations, rotation = 0) {
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(rotation);
+
+                const angleStep = (Math.PI * 2) / this.symmetry;
+
+                for (let i = 0; i < this.symmetry; i++) {
+                    const angle = i * angleStep;
+
+                    ctx.save();
+                    ctx.rotate(angle);
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = this.getColor(i / this.symmetry);
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+
+                    if (this.type === 'koch') {
+                        ctx.moveTo(0, 0);
+                        this.drawKochSegment(ctx, 0, 0, radius, 0, iterations);
+                    } else if (this.type === 'dendritic') {
+                        this.drawDendriticBranch(ctx, 0, 0, radius, 0, iterations);
+                    } else if (this.type === 'stellar') {
+                        ctx.moveTo(0, 0);
+                        const plateWidth = radius * 0.2;
+                        for (let j = 0; j < iterations + 1; j++) {
+                            const r = (j / (iterations + 1)) * radius;
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(r, 0);
+                            ctx.moveTo(r, -plateWidth);
+                            ctx.lineTo(r, plateWidth);
+                        }
+                    } else if (this.type === 'fern') {
+                        this.drawFernBranch(ctx, 0, 0, radius, 0, iterations);
+                    } else if (this.type === 'hexagonal') {
+                        const sides = 6;
+                        ctx.moveTo(radius, 0);
+                        for (let s = 1; s <= sides; s++) {
+                            const a = (s * Math.PI * 2) / sides;
+                            ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
+                        }
+                    }
+
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                ctx.restore();
+
+                // Calculate stats
+                const segments = Math.pow(4, iterations) * this.symmetry;
+                const perimeterRatio = Math.pow(4/3, iterations);
+                const areaRatio = 1 + (8/5) * (1 - Math.pow(1/9, iterations));
+
+                document.getElementById('segmentCount').textContent = segments;
+                document.getElementById('perimeterRatio').textContent = perimeterRatio.toFixed(2);
+                document.getElementById('areaRatio').textContent = areaRatio.toFixed(2);
+            }
+
+            drawFernBranch(ctx, x, y, length, angle, depth) {
+                if (depth === 0 || length < 1) return;
+
+                const x2 = x + Math.cos(angle) * length;
+                const y2 = y + Math.sin(angle) * length;
+
+                ctx.moveTo(x, y);
+                ctx.lineTo(x2, y2);
+
+                const newLength = length * 0.6;
+                const branches = 3;
+
+                for (let i = 0; i < branches; i++) {
+                    const branchAngle = (this.angle * Math.PI / 180) * (i - 1);
+                    const newAngle = angle + branchAngle;
+                    this.drawFernBranch(ctx, x2, y2, newLength, newAngle, depth - 1);
+                }
+            }
+
+            drawMainSnowflake() {
+                const ctx = this.mainCtx;
+                const width = this.mainCanvas.width;
+                const height = this.mainCanvas.height;
+
+                // Clear with gradient
+                const gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width/2);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+                gradient.addColorStop(1, 'rgba(10, 22, 40, 0.9)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+
+                const radius = Math.min(width, height) * 0.4;
+                this.drawSnowflake(ctx, width/2, height/2, radius, this.iterations, this.rotation);
+
+                // Add glow effect
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.getColor();
+                this.drawSnowflake(ctx, width/2, height/2, radius, this.iterations, this.rotation);
+                ctx.restore();
+            }
+
+            drawVariations() {
+                const ctx = this.variationsCtx;
+                const width = this.variationsCanvas.width;
+                const height = this.variationsCanvas.height;
+
+                ctx.fillStyle = 'rgba(10, 22, 40, 0.9)';
+                ctx.fillRect(0, 0, width, height);
+
+                const cols = 3;
+                const rows = 2;
+                const cellWidth = width / cols;
+                const cellHeight = height / rows;
+
+                const variations = [
+                    { iterations: 2, symmetry: 6, angle: 60 },
+                    { iterations: 3, symmetry: 8, angle: 45 },
+                    { iterations: 4, symmetry: 5, angle: 72 },
+                    { iterations: 2, symmetry: 12, angle: 30 },
+                    { iterations: 3, symmetry: 4, angle: 90 },
+                    { iterations: 3, symmetry: 6, angle: 120 }
+                ];
+
+                variations.forEach((v, i) => {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const x = col * cellWidth + cellWidth / 2;
+                    const y = row * cellHeight + cellHeight / 2;
+                    const radius = Math.min(cellWidth, cellHeight) * 0.35;
+
+                    const savedSymmetry = this.symmetry;
+                    const savedAngle = this.angle;
+
+                    this.symmetry = v.symmetry;
+                    this.angle = v.angle;
+
+                    this.drawSnowflake(ctx, x, y, radius, v.iterations, this.time * 0.5 + i);
+
+                    this.symmetry = savedSymmetry;
+                    this.angle = savedAngle;
+
+                    // Label
+                    ctx.fillStyle = '#87ceeb';
+                    ctx.font = '11px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`i:${v.iterations} s:${v.symmetry} a:${v.angle}°`, x, y + radius + 20);
+                });
+            }
+
+            drawAnimationCanvas() {
+                const ctx = this.animationCtx;
+                const width = this.animationCanvas.width;
+                const height = this.animationCanvas.height;
+
+                ctx.fillStyle = 'rgba(10, 22, 40, 0.9)';
+                ctx.fillRect(0, 0, width, height);
+
+                if (this.animateGrowth) {
+                    this.growthProgress += 0.02;
+                    if (this.growthProgress >= this.iterations + 1) {
+                        this.animateGrowth = false;
+                    }
+                }
+
+                const currentIteration = Math.floor(this.growthProgress);
+                const radius = Math.min(width, height) * 0.4;
+
+                this.drawSnowflake(ctx, width/2, height/2, radius, currentIteration, 0);
+
+                // Progress bar
+                const barWidth = width * 0.6;
+                const barHeight = 8;
+                const barX = (width - barWidth) / 2;
+                const barY = height - 30;
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                const progress = this.growthProgress / (this.iterations + 1);
+                ctx.fillStyle = '#87ceeb';
+                ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+                ctx.fillStyle = '#87ceeb';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Iteration: ${currentIteration} / ${this.iterations}`, width/2, barY - 10);
+            }
+
+            initializeSnowfall() {
+                this.snowflakes = [];
+                for (let i = 0; i < this.snowfallIntensity; i++) {
+                    this.snowflakes.push({
+                        x: Math.random() * this.snowfallCanvas.width,
+                        y: Math.random() * this.snowfallCanvas.height,
+                        radius: Math.random() * 3 + 1,
+                        speed: Math.random() * 1 + 0.5,
+                        drift: Math.random() * 0.5 - 0.25,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.02
+                    });
+                }
+            }
+
+            resizeSnowfall() {
+                this.snowfallCanvas.width = window.innerWidth;
+                this.snowfallCanvas.height = window.innerHeight;
+                this.initializeSnowfall();
+            }
+
+            updateSnowfall() {
+                const ctx = this.snowfallCtx;
+                ctx.clearRect(0, 0, this.snowfallCanvas.width, this.snowfallCanvas.height);
+
+                this.snowflakes.forEach(flake => {
+                    flake.y += flake.speed;
+                    flake.x += flake.drift;
+                    flake.rotation += flake.rotationSpeed;
+
+                    if (flake.y > this.snowfallCanvas.height) {
+                        flake.y = -10;
+                        flake.x = Math.random() * this.snowfallCanvas.width;
+                    }
+
+                    if (flake.x > this.snowfallCanvas.width) {
+                        flake.x = 0;
+                    } else if (flake.x < 0) {
+                        flake.x = this.snowfallCanvas.width;
+                    }
+
+                    ctx.save();
+                    ctx.translate(flake.x, flake.y);
+                    ctx.rotate(flake.rotation);
+
+                    // Draw tiny snowflake
+                    ctx.strokeStyle = `rgba(200, 230, 255, ${0.6 + Math.random() * 0.4})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i * Math.PI) / 3;
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(angle) * flake.radius, Math.sin(angle) * flake.radius);
+                    }
+                    ctx.stroke();
+
+                    ctx.restore();
+                });
+            }
+
+            drawAll() {
+                this.drawMainSnowflake();
+                this.drawVariations();
+            }
+
+            animate() {
+                this.time += 0.016;
+                this.rotation += this.rotationSpeed * 0.016;
+
+                this.drawMainSnowflake();
+                this.drawVariations();
+                this.drawAnimationCanvas();
+                this.updateSnowfall();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new SnowflakeFractal();
+        });
+    </script>
+</body>
+</html>
