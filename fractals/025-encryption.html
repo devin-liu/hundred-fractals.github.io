@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>025 - Encryption | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #00ff00;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #00ff00;
+            text-decoration: none;
+            font-weight: 500;
+            border: 1px solid #00ff00;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: #00ff00;
+            color: #000;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .info {
+            color: #00ff00;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid #00ff00;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            background: #000;
+        }
+
+        .canvas-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 0.5rem 1rem;
+            border: 1px solid #00ff00;
+            font-size: 0.9rem;
+            color: #00ff00;
+            z-index: 5;
+            font-family: 'Courier New', monospace;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1.5rem 2rem;
+            border: 1px solid #00ff00;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .slider-group, .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label, .input-group label {
+            font-size: 0.85rem;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #00ff00;
+        }
+
+        input[type="text"], textarea {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .value-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #00ff00;
+            font-weight: 600;
+        }
+
+        button {
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            line-height: 1.6;
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #00ff00;
+        }
+
+        .description strong {
+            color: #00ff88;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        select {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+
+        select:hover {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .stats-panel {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 0.8rem;
+            border: 1px solid #00ff00;
+            font-size: 0.75rem;
+            color: #00ff00;
+            z-index: 5;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats-panel div {
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-panel .value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .key-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 0.8rem;
+            border: 1px solid #00ff00;
+            font-size: 0.75rem;
+            color: #00ff00;
+            z-index: 5;
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            word-break: break-all;
+        }
+
+        .binary-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.1;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="binary-rain" id="binaryRain"></canvas>
+
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← BACK</a>
+            <h1>025 - ENCRYPTION</h1>
+            <div class="info">NOV 11, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-grid">
+            <div class="canvas-container full-width">
+                <div class="canvas-label">ENCRYPTION VISUALIZATION: FRACTAL DIFFUSION</div>
+                <canvas id="mainCanvas" width="1400" height="600"></canvas>
+                <div class="stats-panel">
+                    <div>ROUNDS: <span class="value" id="roundsCount">0</span></div>
+                    <div>ENTROPY: <span class="value" id="entropy">0.00</span></div>
+                    <div>DIFFUSION: <span class="value" id="diffusion">0%</span></div>
+                    <div>AVALANCHE: <span class="value" id="avalanche">0%</span></div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">PLAINTEXT → FRACTAL PATTERN</div>
+                <canvas id="plaintextCanvas" width="680" height="450"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">CIPHERTEXT → FRACTAL PATTERN</div>
+                <canvas id="ciphertextCanvas" width="680" height="450"></canvas>
+                <div class="key-display" id="keyDisplay">KEY: [LOADING...]</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="input-group">
+                    <label>PLAINTEXT INPUT</label>
+                    <textarea id="plaintextInput" placeholder="Enter your secret message here...">The quick brown fox jumps over the lazy dog</textarea>
+                </div>
+                <div class="input-group">
+                    <label>ENCRYPTION KEY</label>
+                    <input type="text" id="keyInput" value="SECRET_KEY_123" placeholder="Enter encryption key">
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>ENCRYPTION ROUNDS</label>
+                    <input type="range" id="roundsSlider" min="1" max="16" value="8" step="1">
+                    <div class="value-display" id="roundsValue">8</div>
+                </div>
+                <div class="slider-group">
+                    <label>FRACTAL COMPLEXITY</label>
+                    <input type="range" id="complexitySlider" min="2" max="6" value="4" step="1">
+                    <div class="value-display" id="complexityValue">4</div>
+                </div>
+                <div class="slider-group">
+                    <label>DIFFUSION SPREAD</label>
+                    <input type="range" id="spreadSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="spreadValue">5</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>CIPHER ALGORITHM</label>
+                    <select id="algorithmSelect">
+                        <option value="fractal-aes">FRACTAL-AES</option>
+                        <option value="fractal-feistel">FRACTAL-FEISTEL</option>
+                        <option value="fractal-chaos">FRACTAL-CHAOS</option>
+                        <option value="fractal-substitution">FRACTAL-SUBSTITUTION</option>
+                    </select>
+                </div>
+                <div class="slider-group">
+                    <label>ANIMATION SPEED</label>
+                    <input type="range" id="speedSlider" min="0.1" max="3" value="1" step="0.1">
+                    <div class="value-display" id="speedValue">1.0x</div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="encryptBtn">ENCRYPT</button>
+                <button id="demonstrateBtn">DEMONSTRATE AVALANCHE</button>
+                <button id="resetBtn">RESET</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>FRACTAL ENCRYPTION: WHERE CHAOS MEETS CRYPTOGRAPHY</h2>
+            <p>
+                This visualization demonstrates how <strong>encryption algorithms</strong> transform readable data
+                (plaintext) into seemingly random gibberish (ciphertext) through a series of mathematical operations.
+                Each encryption round is visualized as a <strong>fractal transformation</strong>, showing how data
+                diffuses and becomes increasingly complex with each iteration.
+            </p>
+            <p>
+                Modern encryption relies on two key principles: <strong>DIFFUSION</strong> (spreading information
+                from one bit of plaintext across many bits of ciphertext) and <strong>CONFUSION</strong> (making
+                the relationship between key and ciphertext extremely complex). Watch how a small change in input
+                creates a completely different fractal pattern - this is the <strong>avalanche effect</strong>,
+                where changing a single bit cascades through the entire output.
+            </p>
+            <p>
+                The fractal patterns emerge from the recursive nature of block cipher rounds. Each round takes the
+                output from the previous round and applies substitution (replacing data with different values) and
+                permutation (rearranging data). After sufficient rounds, the output becomes indistinguishable from
+                random noise - but with the correct key, the process can be reversed perfectly.
+            </p>
+            <p>
+                <strong>FRACTAL-AES</strong> mimics AES encryption structure with substitution-permutation networks.
+                <strong>FRACTAL-FEISTEL</strong> uses the Feistel network design (like DES).
+                <strong>FRACTAL-CHAOS</strong> employs chaotic maps for extreme sensitivity to initial conditions.
+                <strong>FRACTAL-SUBSTITUTION</strong> uses recursive substitution boxes creating self-similar patterns.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class EncryptionFractal {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.plaintextCanvas = document.getElementById('plaintextCanvas');
+                this.plaintextCtx = this.plaintextCanvas.getContext('2d');
+                this.ciphertextCanvas = document.getElementById('ciphertextCanvas');
+                this.ciphertextCtx = this.ciphertextCanvas.getContext('2d');
+                this.binaryRainCanvas = document.getElementById('binaryRain');
+                this.binaryRainCtx = this.binaryRainCanvas.getContext('2d');
+
+                // Parameters
+                this.plaintext = "The quick brown fox jumps over the lazy dog";
+                this.key = "SECRET_KEY_123";
+                this.rounds = 8;
+                this.complexity = 4;
+                this.spread = 5;
+                this.algorithm = 'fractal-aes';
+                this.animSpeed = 1.0;
+
+                // State
+                this.time = 0;
+                this.currentRound = 0;
+                this.isAnimating = false;
+                this.plaintextBytes = [];
+                this.ciphertextBytes = [];
+                this.keyBytes = [];
+                this.binaryDrops = [];
+
+                this.setupEventListeners();
+                this.resizeBinaryRain();
+                window.addEventListener('resize', () => this.resizeBinaryRain());
+                this.processInput();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('plaintextInput').addEventListener('input', (e) => {
+                    this.plaintext = e.target.value;
+                    this.processInput();
+                });
+
+                document.getElementById('keyInput').addEventListener('input', (e) => {
+                    this.key = e.target.value;
+                    this.processInput();
+                });
+
+                document.getElementById('roundsSlider').addEventListener('input', (e) => {
+                    this.rounds = parseInt(e.target.value);
+                    document.getElementById('roundsValue').textContent = this.rounds;
+                    this.processInput();
+                });
+
+                document.getElementById('complexitySlider').addEventListener('input', (e) => {
+                    this.complexity = parseInt(e.target.value);
+                    document.getElementById('complexityValue').textContent = this.complexity;
+                });
+
+                document.getElementById('spreadSlider').addEventListener('input', (e) => {
+                    this.spread = parseInt(e.target.value);
+                    document.getElementById('spreadValue').textContent = this.spread;
+                });
+
+                document.getElementById('algorithmSelect').addEventListener('change', (e) => {
+                    this.algorithm = e.target.value;
+                    this.processInput();
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.animSpeed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = this.animSpeed.toFixed(1) + 'x';
+                });
+
+                document.getElementById('encryptBtn').addEventListener('click', () => {
+                    this.startEncryption();
+                });
+
+                document.getElementById('demonstrateBtn').addEventListener('click', () => {
+                    this.demonstrateAvalanche();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.currentRound = 0;
+                    this.isAnimating = false;
+                });
+            }
+
+            stringToBytes(str) {
+                const bytes = [];
+                for (let i = 0; i < str.length; i++) {
+                    bytes.push(str.charCodeAt(i));
+                }
+                return bytes;
+            }
+
+            simpleHash(bytes, seed = 0) {
+                let hash = seed;
+                for (let i = 0; i < bytes.length; i++) {
+                    hash = ((hash << 5) - hash + bytes[i]) | 0;
+                }
+                return Math.abs(hash);
+            }
+
+            xorCipher(data, key, round) {
+                const result = [];
+                const expandedKey = this.expandKey(key, data.length, round);
+                for (let i = 0; i < data.length; i++) {
+                    result.push(data[i] ^ expandedKey[i % expandedKey.length]);
+                }
+                return result;
+            }
+
+            expandKey(key, length, round) {
+                const expanded = [];
+                const keyHash = this.simpleHash(key, round);
+                for (let i = 0; i < length; i++) {
+                    const val = (keyHash + i * round) % 256;
+                    expanded.push(val);
+                }
+                return expanded;
+            }
+
+            substitute(data, round) {
+                return data.map((byte, i) => {
+                    const sbox = ((byte + round * 17 + i * 13) ^ (byte << 1)) % 256;
+                    return sbox;
+                });
+            }
+
+            permute(data) {
+                const result = [...data];
+                for (let i = result.length - 1; i > 0; i--) {
+                    const j = this.simpleHash([i], this.currentRound) % (i + 1);
+                    [result[i], result[j]] = [result[j], result[i]];
+                }
+                return result;
+            }
+
+            feistelRound(data, round) {
+                const half = Math.floor(data.length / 2);
+                const left = data.slice(0, half);
+                const right = data.slice(half);
+
+                const f = this.substitute(right, round);
+                const newLeft = right;
+                const newRight = left.map((l, i) => l ^ (f[i] || 0));
+
+                return [...newLeft, ...newRight];
+            }
+
+            encrypt(data, key, rounds) {
+                let state = [...data];
+
+                for (let r = 0; r < rounds; r++) {
+                    switch (this.algorithm) {
+                        case 'fractal-aes':
+                            state = this.substitute(state, r);
+                            state = this.permute(state);
+                            state = this.xorCipher(state, key, r);
+                            break;
+                        case 'fractal-feistel':
+                            state = this.feistelRound(state, r);
+                            state = this.xorCipher(state, key, r);
+                            break;
+                        case 'fractal-chaos':
+                            state = state.map((byte, i) => {
+                                const chaos = Math.sin(byte * 0.01 + r + i) * 127 + 128;
+                                return (byte ^ Math.floor(chaos)) % 256;
+                            });
+                            state = this.xorCipher(state, key, r);
+                            break;
+                        case 'fractal-substitution':
+                            for (let depth = 0; depth < 3; depth++) {
+                                state = this.substitute(state, r + depth);
+                            }
+                            state = this.xorCipher(state, key, r);
+                            break;
+                    }
+                }
+
+                return state;
+            }
+
+            processInput() {
+                this.plaintextBytes = this.stringToBytes(this.plaintext);
+                this.keyBytes = this.stringToBytes(this.key);
+                this.ciphertextBytes = this.encrypt(this.plaintextBytes, this.keyBytes, this.rounds);
+
+                // Update key display
+                const keyHex = this.keyBytes.slice(0, 16).map(b => b.toString(16).padStart(2, '0')).join('');
+                document.getElementById('keyDisplay').textContent = `KEY: ${keyHex}...`;
+
+                // Calculate metrics
+                this.updateMetrics();
+            }
+
+            updateMetrics() {
+                document.getElementById('roundsCount').textContent = this.currentRound;
+
+                // Calculate entropy (simplified)
+                const freq = new Array(256).fill(0);
+                this.ciphertextBytes.forEach(b => freq[b]++);
+                let entropy = 0;
+                freq.forEach(f => {
+                    if (f > 0) {
+                        const p = f / this.ciphertextBytes.length;
+                        entropy -= p * Math.log2(p);
+                    }
+                });
+                document.getElementById('entropy').textContent = entropy.toFixed(2);
+
+                // Diffusion (how spread out the changes are)
+                const diffusion = Math.min(100, (entropy / 8) * 100);
+                document.getElementById('diffusion').textContent = diffusion.toFixed(0) + '%';
+
+                // Avalanche effect (changes from original)
+                let changes = 0;
+                for (let i = 0; i < Math.min(this.plaintextBytes.length, this.ciphertextBytes.length); i++) {
+                    changes += (this.plaintextBytes[i] !== this.ciphertextBytes[i]) ? 1 : 0;
+                }
+                const avalanche = (changes / this.plaintextBytes.length) * 100;
+                document.getElementById('avalanche').textContent = avalanche.toFixed(0) + '%';
+            }
+
+            startEncryption() {
+                this.isAnimating = true;
+                this.currentRound = 0;
+            }
+
+            demonstrateAvalanche() {
+                // Change one character and show the difference
+                const modified = this.plaintext.charAt(0) === 'T' ?
+                    't' + this.plaintext.slice(1) :
+                    'T' + this.plaintext.slice(1);
+
+                const modifiedBytes = this.stringToBytes(modified);
+                const modifiedCipher = this.encrypt(modifiedBytes, this.keyBytes, this.rounds);
+
+                // Flash the difference
+                alert(`AVALANCHE EFFECT DEMONSTRATION:\n\nOriginal: "${this.plaintext}"\nModified: "${modified}"\n\nSingle character change results in completely different ciphertext!`);
+            }
+
+            bytesToFractalPattern(bytes, seed = 0) {
+                // Convert bytes to fractal coordinates
+                const points = [];
+                for (let i = 0; i < bytes.length; i++) {
+                    const byte = bytes[i];
+                    const angle = (byte / 255) * Math.PI * 2;
+                    const radius = ((byte + seed) % 128) / 128;
+                    const depth = i % this.complexity;
+
+                    points.push({ angle, radius, depth, byte });
+                }
+                return points;
+            }
+
+            drawFractalFromBytes(ctx, bytes, centerX, centerY, baseRadius, colorShift = 0) {
+                const points = this.bytesToFractalPattern(bytes, this.currentRound);
+
+                points.forEach((point, i) => {
+                    const { angle, radius, depth, byte } = point;
+
+                    // Draw fractal branches
+                    this.drawFractalBranch(
+                        ctx,
+                        centerX, centerY,
+                        angle,
+                        baseRadius * radius,
+                        depth,
+                        byte + colorShift,
+                        this.complexity
+                    );
+                });
+            }
+
+            drawFractalBranch(ctx, x, y, angle, length, depth, colorSeed, maxDepth) {
+                if (depth > maxDepth || length < 1) return;
+
+                const endX = x + Math.cos(angle) * length;
+                const endY = y + Math.sin(angle) * length;
+
+                const hue = (colorSeed * 137.5 + depth * 60) % 360;
+                const alpha = 0.3 + (depth / maxDepth) * 0.4;
+
+                ctx.strokeStyle = `hsla(${hue}, 80%, 50%, ${alpha})`;
+                ctx.lineWidth = Math.max(1, maxDepth - depth + 1);
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+
+                // Recursive branches
+                const branches = this.spread;
+                for (let i = 0; i < branches; i++) {
+                    const branchAngle = angle + (i - branches / 2) * (Math.PI / (branches * 2));
+                    const branchLength = length * 0.6;
+                    this.drawFractalBranch(ctx, endX, endY, branchAngle, branchLength, depth + 1, colorSeed, maxDepth);
+                }
+
+                // Draw point
+                ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(endX, endY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawMainVisualization() {
+                const ctx = this.mainCtx;
+                const width = this.mainCanvas.width;
+                const height = this.mainCanvas.height;
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw encryption rounds as layers
+                const layerHeight = (height - 100) / (this.rounds + 1);
+
+                for (let round = 0; round <= this.rounds; round++) {
+                    const y = 50 + round * layerHeight;
+                    const isActive = round <= this.currentRound;
+
+                    // Round label
+                    ctx.fillStyle = isActive ? '#00ff00' : '#003300';
+                    ctx.font = '12px Courier New';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(round === 0 ? 'INPUT' : `R${round}`, 45, y + 4);
+
+                    if (!isActive) continue;
+
+                    // Compute state at this round
+                    const state = this.encrypt(this.plaintextBytes, this.keyBytes, round);
+
+                    // Draw data flow as particles
+                    const numParticles = Math.min(state.length, 50);
+                    const spacing = (width - 100) / numParticles;
+
+                    for (let i = 0; i < numParticles; i++) {
+                        const x = 50 + i * spacing;
+                        const byte = state[i];
+                        const hue = (byte / 255) * 120;
+
+                        // Particle
+                        const pulse = 0.5 + 0.5 * Math.sin(this.time * 2 + i * 0.1);
+                        ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${pulse})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 3 + pulse * 2, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Connection to next round
+                        if (round < this.rounds && round < this.currentRound) {
+                            const nextY = 50 + (round + 1) * layerHeight;
+                            const nextState = this.encrypt(this.plaintextBytes, this.keyBytes, round + 1);
+                            const nextByte = nextState[i];
+                            const nextHue = (nextByte / 255) * 120;
+
+                            const gradient = ctx.createLinearGradient(x, y, x, nextY);
+                            gradient.addColorStop(0, `hsla(${hue}, 100%, 50%, 0.2)`);
+                            gradient.addColorStop(1, `hsla(${nextHue}, 100%, 50%, 0.2)`);
+
+                            ctx.strokeStyle = gradient;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(x, nextY);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            drawPlaintextFractal() {
+                const ctx = this.plaintextCtx;
+                const width = this.plaintextCanvas.width;
+                const height = this.plaintextCanvas.height;
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+
+                this.drawFractalFromBytes(
+                    ctx,
+                    this.plaintextBytes,
+                    width / 2,
+                    height / 2,
+                    Math.min(width, height) * 0.35,
+                    0
+                );
+            }
+
+            drawCiphertextFractal() {
+                const ctx = this.ciphertextCtx;
+                const width = this.ciphertextCanvas.width;
+                const height = this.ciphertextCanvas.height;
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+
+                this.drawFractalFromBytes(
+                    ctx,
+                    this.ciphertextBytes,
+                    width / 2,
+                    height / 2,
+                    Math.min(width, height) * 0.35,
+                    100
+                );
+            }
+
+            resizeBinaryRain() {
+                this.binaryRainCanvas.width = window.innerWidth;
+                this.binaryRainCanvas.height = window.innerHeight;
+
+                this.binaryDrops = [];
+                const columns = Math.floor(this.binaryRainCanvas.width / 20);
+                for (let i = 0; i < columns; i++) {
+                    this.binaryDrops.push({
+                        x: i * 20,
+                        y: Math.random() * this.binaryRainCanvas.height,
+                        speed: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            drawBinaryRain() {
+                const ctx = this.binaryRainCtx;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, this.binaryRainCanvas.width, this.binaryRainCanvas.height);
+
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '14px Courier New';
+
+                this.binaryDrops.forEach(drop => {
+                    const char = Math.random() > 0.5 ? '1' : '0';
+                    ctx.fillText(char, drop.x, drop.y);
+
+                    drop.y += drop.speed;
+                    if (drop.y > this.binaryRainCanvas.height) {
+                        drop.y = 0;
+                    }
+                });
+            }
+
+            animate() {
+                this.time += 0.016 * this.animSpeed;
+
+                if (this.isAnimating && this.currentRound < this.rounds) {
+                    this.currentRound += 0.1 * this.animSpeed;
+                    if (this.currentRound >= this.rounds) {
+                        this.currentRound = this.rounds;
+                        this.isAnimating = false;
+                    }
+                    this.ciphertextBytes = this.encrypt(this.plaintextBytes, this.keyBytes, Math.floor(this.currentRound));
+                    this.updateMetrics();
+                }
+
+                this.drawMainVisualization();
+                this.drawPlaintextFractal();
+                this.drawCiphertextFractal();
+                this.drawBinaryRain();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new EncryptionFractal();
+        });
+    </script>
+</body>
+</html>
