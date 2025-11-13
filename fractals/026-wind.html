@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>026 - Wind | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #e6f2ff 0%, #b3d9ff 50%, #80c0ff 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(44, 62, 80, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #2980b9;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .info {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(52, 152, 219, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .canvas-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            box-shadow: 0 4px 16px rgba(52, 152, 219, 0.1);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #3498db;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            line-height: 1.6;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            box-shadow: 0 4px 16px rgba(52, 152, 219, 0.1);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #2c3e50;
+        }
+
+        .description strong {
+            color: #2980b9;
+        }
+
+        select {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: #3498db;
+        }
+
+        .stats-overlay {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #2c3e50;
+            z-index: 5;
+            font-family: monospace;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-overlay div {
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-overlay .value {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .wind-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            z-index: 5;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .wind-arrow {
+            display: inline-block;
+            margin-right: 0.5rem;
+            transition: transform 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>026 - Wind</h1>
+            <div class="info">November 12, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-grid">
+            <div class="canvas-container full-width">
+                <div class="canvas-label">Fractal Wind Flow Field</div>
+                <canvas id="mainCanvas" width="1400" height="600"></canvas>
+                <div class="wind-indicator" id="windIndicator">
+                    <span class="wind-arrow" id="windArrow">→</span>
+                    <span id="windSpeed">Calm</span>
+                </div>
+                <div class="stats-overlay">
+                    <div>Particles: <span class="value" id="particleCount">0</span></div>
+                    <div>Turbulence: <span class="value" id="turbulenceLevel">0%</span></div>
+                    <div>Flow Complexity: <span class="value" id="complexity">0</span></div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Fractal Turbulence Pattern</div>
+                <canvas id="turbulenceCanvas" width="680" height="450"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Vortex Structure</div>
+                <canvas id="vortexCanvas" width="680" height="450"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Wind Strength</label>
+                    <input type="range" id="strengthSlider" min="0" max="10" value="3" step="0.1">
+                    <div class="value-display" id="strengthValue">3.0</div>
+                </div>
+                <div class="slider-group">
+                    <label>Turbulence Intensity</label>
+                    <input type="range" id="turbulenceSlider" min="0" max="10" value="5" step="0.1">
+                    <div class="value-display" id="turbulenceValue">5.0</div>
+                </div>
+                <div class="slider-group">
+                    <label>Flow Scale</label>
+                    <input type="range" id="scaleSlider" min="10" max="200" value="50" step="5">
+                    <div class="value-display" id="scaleValue">50</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Particle Count</label>
+                    <input type="range" id="particlesSlider" min="100" max="5000" value="1000" step="100">
+                    <div class="value-display" id="particlesValue">1000</div>
+                </div>
+                <div class="slider-group">
+                    <label>Fractal Octaves</label>
+                    <input type="range" id="octavesSlider" min="1" max="6" value="4" step="1">
+                    <div class="value-display" id="octavesValue">4</div>
+                </div>
+                <div class="slider-group">
+                    <label>Wind Pattern</label>
+                    <select id="patternSelect">
+                        <option value="perlin">Perlin Flow</option>
+                        <option value="vortex">Vortex Field</option>
+                        <option value="turbulent">Turbulent Chaos</option>
+                        <option value="laminar">Laminar Stream</option>
+                        <option value="spiral">Spiral Currents</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Wind Direction</label>
+                    <input type="range" id="directionSlider" min="0" max="360" value="45" step="5">
+                    <div class="value-display" id="directionValue">45°</div>
+                </div>
+                <div class="slider-group">
+                    <label>Gust Frequency</label>
+                    <input type="range" id="gustSlider" min="0" max="5" value="1" step="0.1">
+                    <div class="value-display" id="gustValue">1.0</div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="gustBtn">Create Wind Gust</button>
+                <button id="resetBtn">Reset Flow</button>
+                <button id="pauseBtn">Pause</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Fractal Turbulence in Wind Flow</h2>
+            <p>
+                Wind flow exhibits <strong>fractal properties</strong> at multiple scales - from global atmospheric
+                circulation patterns down to small eddies and vortices. This visualization demonstrates how
+                <strong>turbulence cascades</strong> create self-similar patterns: large vortices break down into
+                smaller ones, which break down into even smaller ones, following a fractal hierarchy.
+            </p>
+            <p>
+                The flow field is generated using <strong>fractal noise</strong> (Perlin noise with multiple octaves),
+                where each octave represents turbulence at a different scale. Large-scale features provide the overall
+                flow direction, while smaller scales add detail and complexity. This mirrors how real atmospheric
+                turbulence works - the energy cascades from large to small scales in what's called the
+                <strong>Kolmogorov cascade</strong>.
+            </p>
+            <p>
+                Watch how particles (representing dust, leaves, or air molecules) follow the invisible wind currents.
+                The <strong>streamlines</strong> they create reveal the fractal structure of the flow field. Different
+                wind patterns show different behaviors: <strong>laminar flow</strong> creates smooth, parallel streams;
+                <strong>turbulent flow</strong> generates chaotic, swirling patterns; <strong>vortex fields</strong>
+                create rotating structures at multiple scales.
+            </p>
+            <p>
+                The fractal dimension of turbulent flow is approximately 2.33, meaning it fills space more than a line
+                (dimension 1) but less than a surface (dimension 2). This fractional dimensionality captures the
+                complex, space-filling nature of turbulent wind patterns. Adjust the octaves to see how adding more
+                scales of detail increases the complexity and creates more realistic, natural-looking flow patterns.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // Simple Perlin noise implementation
+        class PerlinNoise {
+            constructor(seed = 0) {
+                this.seed = seed;
+                this.gradients = {};
+                this.memory = {};
+            }
+
+            rand(x, y) {
+                const angle = (Math.sin(x * 12.9898 + y * 78.233 + this.seed) * 43758.5453) % (Math.PI * 2);
+                return { x: Math.cos(angle), y: Math.sin(angle) };
+            }
+
+            dot(g, x, y) {
+                return g.x * x + g.y * y;
+            }
+
+            smootherstep(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            noise(x, y) {
+                const xi = Math.floor(x);
+                const yi = Math.floor(y);
+                const xf = x - xi;
+                const yf = y - yi;
+
+                const g00 = this.rand(xi, yi);
+                const g10 = this.rand(xi + 1, yi);
+                const g01 = this.rand(xi, yi + 1);
+                const g11 = this.rand(xi + 1, yi + 1);
+
+                const u = this.smootherstep(xf);
+                const v = this.smootherstep(yf);
+
+                const n00 = this.dot(g00, xf, yf);
+                const n10 = this.dot(g10, xf - 1, yf);
+                const n01 = this.dot(g01, xf, yf - 1);
+                const n11 = this.dot(g11, xf - 1, yf - 1);
+
+                const nx0 = n00 * (1 - u) + n10 * u;
+                const nx1 = n01 * (1 - u) + n11 * u;
+
+                return nx0 * (1 - v) + nx1 * v;
+            }
+
+            fractalNoise(x, y, octaves, persistence = 0.5) {
+                let total = 0;
+                let frequency = 1;
+                let amplitude = 1;
+                let maxValue = 0;
+
+                for (let i = 0; i < octaves; i++) {
+                    total += this.noise(x * frequency, y * frequency) * amplitude;
+                    maxValue += amplitude;
+                    amplitude *= persistence;
+                    frequency *= 2;
+                }
+
+                return total / maxValue;
+            }
+        }
+
+        class WindFractal {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.turbulenceCanvas = document.getElementById('turbulenceCanvas');
+                this.turbulenceCtx = this.turbulenceCanvas.getContext('2d');
+                this.vortexCanvas = document.getElementById('vortexCanvas');
+                this.vortexCtx = this.vortexCanvas.getContext('2d');
+
+                // Parameters
+                this.windStrength = 3;
+                this.turbulence = 5;
+                this.flowScale = 50;
+                this.numParticles = 1000;
+                this.octaves = 4;
+                this.pattern = 'perlin';
+                this.windDirection = 45;
+                this.gustFrequency = 1;
+
+                // State
+                this.time = 0;
+                this.isPaused = false;
+                this.particles = [];
+                this.noise = new PerlinNoise(Math.random() * 1000);
+                this.gustTime = 0;
+
+                this.initializeParticles();
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.getElementById('strengthSlider').addEventListener('input', (e) => {
+                    this.windStrength = parseFloat(e.target.value);
+                    document.getElementById('strengthValue').textContent = this.windStrength.toFixed(1);
+                    this.updateWindIndicator();
+                });
+
+                document.getElementById('turbulenceSlider').addEventListener('input', (e) => {
+                    this.turbulence = parseFloat(e.target.value);
+                    document.getElementById('turbulenceValue').textContent = this.turbulence.toFixed(1);
+                });
+
+                document.getElementById('scaleSlider').addEventListener('input', (e) => {
+                    this.flowScale = parseInt(e.target.value);
+                    document.getElementById('scaleValue').textContent = this.flowScale;
+                });
+
+                document.getElementById('particlesSlider').addEventListener('input', (e) => {
+                    this.numParticles = parseInt(e.target.value);
+                    document.getElementById('particlesValue').textContent = this.numParticles;
+                    this.initializeParticles();
+                });
+
+                document.getElementById('octavesSlider').addEventListener('input', (e) => {
+                    this.octaves = parseInt(e.target.value);
+                    document.getElementById('octavesValue').textContent = this.octaves;
+                });
+
+                document.getElementById('patternSelect').addEventListener('change', (e) => {
+                    this.pattern = e.target.value;
+                });
+
+                document.getElementById('directionSlider').addEventListener('input', (e) => {
+                    this.windDirection = parseInt(e.target.value);
+                    document.getElementById('directionValue').textContent = this.windDirection + '°';
+                    this.updateWindIndicator();
+                });
+
+                document.getElementById('gustSlider').addEventListener('input', (e) => {
+                    this.gustFrequency = parseFloat(e.target.value);
+                    document.getElementById('gustValue').textContent = this.gustFrequency.toFixed(1);
+                });
+
+                document.getElementById('gustBtn').addEventListener('click', () => {
+                    this.createGust();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.noise = new PerlinNoise(Math.random() * 1000);
+                    this.initializeParticles();
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', (e) => {
+                    this.isPaused = !this.isPaused;
+                    e.target.textContent = this.isPaused ? 'Resume' : 'Pause';
+                });
+            }
+
+            initializeParticles() {
+                this.particles = [];
+                for (let i = 0; i < this.numParticles; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.mainCanvas.width,
+                        y: Math.random() * this.mainCanvas.height,
+                        vx: 0,
+                        vy: 0,
+                        life: Math.random(),
+                        hue: Math.random() * 60 + 180 // Blue-cyan range
+                    });
+                }
+            }
+
+            createGust() {
+                this.gustTime = this.time;
+                this.particles.forEach(p => {
+                    const gustAngle = (this.windDirection + (Math.random() - 0.5) * 60) * Math.PI / 180;
+                    const gustStrength = this.windStrength * 3;
+                    p.vx += Math.cos(gustAngle) * gustStrength;
+                    p.vy += Math.sin(gustAngle) * gustStrength;
+                });
+            }
+
+            updateWindIndicator() {
+                const arrow = document.getElementById('windArrow');
+                const speed = document.getElementById('windSpeed');
+
+                arrow.style.transform = `rotate(${this.windDirection}deg)`;
+
+                if (this.windStrength < 2) speed.textContent = 'Calm';
+                else if (this.windStrength < 4) speed.textContent = 'Breeze';
+                else if (this.windStrength < 7) speed.textContent = 'Windy';
+                else speed.textContent = 'Gale';
+            }
+
+            getFlowVector(x, y, t) {
+                const scale = this.flowScale / 1000;
+
+                switch (this.pattern) {
+                    case 'perlin':
+                        const nx = this.noise.fractalNoise(x * scale, y * scale + t * 0.1, this.octaves);
+                        const ny = this.noise.fractalNoise(x * scale + 100, y * scale + t * 0.1, this.octaves);
+                        return {
+                            x: nx * this.turbulence + Math.cos(this.windDirection * Math.PI / 180) * this.windStrength,
+                            y: ny * this.turbulence + Math.sin(this.windDirection * Math.PI / 180) * this.windStrength
+                        };
+
+                    case 'vortex':
+                        const cx = this.mainCanvas.width / 2;
+                        const cy = this.mainCanvas.height / 2;
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) + this.turbulence * 0.1;
+                        return {
+                            x: -Math.sin(angle) * this.windStrength + dx * 0.001 * this.turbulence,
+                            y: Math.cos(angle) * this.windStrength + dy * 0.001 * this.turbulence
+                        };
+
+                    case 'turbulent':
+                        const tx = this.noise.fractalNoise(x * scale * 2, y * scale * 2 + t * 0.2, this.octaves) * this.turbulence * 2;
+                        const ty = this.noise.fractalNoise(x * scale * 2 + 50, y * scale * 2 + t * 0.2, this.octaves) * this.turbulence * 2;
+                        return { x: tx, y: ty };
+
+                    case 'laminar':
+                        const lx = Math.cos(this.windDirection * Math.PI / 180) * this.windStrength;
+                        const ly = Math.sin(this.windDirection * Math.PI / 180) * this.windStrength;
+                        const lnoise = this.noise.noise(y * scale, t * 0.1) * this.turbulence * 0.3;
+                        return { x: lx + lnoise, y: ly };
+
+                    case 'spiral':
+                        const scx = this.mainCanvas.width / 2;
+                        const scy = this.mainCanvas.height / 2;
+                        const sdx = x - scx;
+                        const sdy = y - scy;
+                        const sangle = Math.atan2(sdy, sdx) + t * 0.01 * this.windStrength;
+                        const sradius = Math.sqrt(sdx * sdx + sdy * sdy);
+                        const snoise = this.noise.fractalNoise(x * scale, y * scale, this.octaves);
+                        return {
+                            x: Math.cos(sangle) * this.windStrength + snoise * this.turbulence,
+                            y: Math.sin(sangle) * this.windStrength + snoise * this.turbulence
+                        };
+                }
+            }
+
+            updateParticle(particle, dt) {
+                const flow = this.getFlowVector(particle.x, particle.y, this.time);
+
+                // Add gust effect
+                const gustEffect = Math.max(0, 1 - (this.time - this.gustTime) * 2);
+                const gustMultiplier = 1 + gustEffect * 2;
+
+                particle.vx += flow.x * dt * gustMultiplier;
+                particle.vy += flow.y * dt * gustMultiplier;
+
+                // Damping
+                particle.vx *= 0.95;
+                particle.vy *= 0.95;
+
+                particle.x += particle.vx * dt;
+                particle.y += particle.vy * dt;
+
+                // Wrap around
+                if (particle.x < 0) particle.x = this.mainCanvas.width;
+                if (particle.x > this.mainCanvas.width) particle.x = 0;
+                if (particle.y < 0) particle.y = this.mainCanvas.height;
+                if (particle.y > this.mainCanvas.height) particle.y = 0;
+
+                // Update life
+                particle.life -= dt * 0.1;
+                if (particle.life <= 0) {
+                    particle.life = 1;
+                    particle.hue = Math.random() * 60 + 180;
+                }
+            }
+
+            drawMainCanvas() {
+                const ctx = this.mainCtx;
+                const width = this.mainCanvas.width;
+                const height = this.mainCanvas.height;
+
+                // Fade effect
+                ctx.fillStyle = 'rgba(230, 242, 255, 0.1)';
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw flow field grid
+                const gridSpacing = 40;
+                ctx.strokeStyle = 'rgba(52, 152, 219, 0.15)';
+                ctx.lineWidth = 1;
+
+                for (let x = 0; x < width; x += gridSpacing) {
+                    for (let y = 0; y < height; y += gridSpacing) {
+                        const flow = this.getFlowVector(x, y, this.time);
+                        const len = Math.sqrt(flow.x * flow.x + flow.y * flow.y);
+                        const angle = Math.atan2(flow.y, flow.x);
+
+                        const endX = x + Math.cos(angle) * Math.min(len * 5, 20);
+                        const endY = y + Math.sin(angle) * Math.min(len * 5, 20);
+
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(endX, endY);
+                        ctx.stroke();
+
+                        // Arrow head
+                        ctx.beginPath();
+                        ctx.moveTo(endX, endY);
+                        ctx.lineTo(
+                            endX - Math.cos(angle - 0.5) * 5,
+                            endY - Math.sin(angle - 0.5) * 5
+                        );
+                        ctx.moveTo(endX, endY);
+                        ctx.lineTo(
+                            endX - Math.cos(angle + 0.5) * 5,
+                            endY - Math.sin(angle + 0.5) * 5
+                        );
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw particles
+                this.particles.forEach(p => {
+                    const alpha = p.life * 0.6;
+                    const size = 2 + p.life * 2;
+
+                    ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Trail
+                    if (p.vx !== 0 || p.vy !== 0) {
+                        const trailLength = Math.min(Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 2, 20);
+                        const angle = Math.atan2(p.vy, p.vx);
+
+                        ctx.strokeStyle = `hsla(${p.hue}, 70%, 60%, ${alpha * 0.3})`;
+                        ctx.lineWidth = size;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p.x - Math.cos(angle) * trailLength, p.y - Math.sin(angle) * trailLength);
+                        ctx.stroke();
+                    }
+                });
+
+                // Update stats
+                document.getElementById('particleCount').textContent = this.particles.length;
+                document.getElementById('turbulenceLevel').textContent = Math.round(this.turbulence * 10) + '%';
+                document.getElementById('complexity').textContent = this.octaves;
+            }
+
+            drawTurbulencePattern() {
+                const ctx = this.turbulenceCtx;
+                const width = this.turbulenceCanvas.width;
+                const height = this.turbulenceCanvas.height;
+
+                const imageData = ctx.createImageData(width, height);
+                const scale = this.flowScale / 1000;
+
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < height; y++) {
+                        const value = this.noise.fractalNoise(x * scale, y * scale + this.time * 0.1, this.octaves);
+                        const normalized = (value + 1) * 0.5; // Normalize to 0-1
+
+                        const idx = (y * width + x) * 4;
+                        const intensity = Math.floor(normalized * 255);
+
+                        // Blue-cyan color scheme
+                        imageData.data[idx] = Math.floor(intensity * 0.6);
+                        imageData.data[idx + 1] = Math.floor(intensity * 0.8);
+                        imageData.data[idx + 2] = intensity;
+                        imageData.data[idx + 3] = 255;
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+            drawVortexStructure() {
+                const ctx = this.vortexCtx;
+                const width = this.vortexCanvas.width;
+                const height = this.vortexCanvas.height;
+
+                ctx.fillStyle = 'rgba(230, 242, 255, 1)';
+                ctx.fillRect(0, 0, width, height);
+
+                const centerX = width / 2;
+                const centerY = height / 2;
+
+                // Draw vortex streamlines
+                const numStreamlines = 20;
+                for (let i = 0; i < numStreamlines; i++) {
+                    const startAngle = (i / numStreamlines) * Math.PI * 2;
+                    const startRadius = 50 + i * 10;
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = `hsla(${190 + i * 5}, 70%, 60%, 0.6)`;
+                    ctx.lineWidth = 2;
+
+                    let angle = startAngle;
+                    let radius = startRadius;
+
+                    for (let j = 0; j < 200; j++) {
+                        const x = centerX + Math.cos(angle) * radius;
+                        const y = centerY + Math.sin(angle) * radius;
+
+                        if (j === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+
+                        angle += 0.1 + this.turbulence * 0.01;
+                        radius *= 0.98;
+
+                        if (radius < 5) break;
+                    }
+
+                    ctx.stroke();
+                }
+
+                // Draw center
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 30);
+                gradient.addColorStop(0, 'rgba(52, 152, 219, 0.8)');
+                gradient.addColorStop(1, 'rgba(52, 152, 219, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            animate() {
+                if (!this.isPaused) {
+                    const dt = 16 / 1000; // Fixed timestep
+                    this.time += dt;
+
+                    this.particles.forEach(p => this.updateParticle(p, dt));
+                }
+
+                this.drawMainCanvas();
+                this.drawTurbulencePattern();
+                this.drawVortexStructure();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new WindFractal();
+        });
+    </script>
+</body>
+</html>
