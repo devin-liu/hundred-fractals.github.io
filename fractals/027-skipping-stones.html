@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>027 - Skipping Stones | Hundred Fractals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 50%, #4a7ba7 100%);
+            color: #e8f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: rgba(26, 58, 82, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(232, 244, 248, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #7dd3fc;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #38bdf8;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e8f4f8;
+        }
+
+        .info {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(125, 211, 252, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: rgba(26, 58, 82, 0.6);
+        }
+
+        .canvas-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(26, 58, 82, 0.95);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #e8f4f8;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 500;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 2rem;
+            background: rgba(26, 58, 82, 0.8);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(125, 211, 252, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .slider-group label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #7dd3fc;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #7dd3fc;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .description {
+            max-width: 1400px;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(26, 58, 82, 0.8);
+            border-radius: 12px;
+            line-height: 1.6;
+            border: 1px solid rgba(125, 211, 252, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .description h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #7dd3fc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .description p {
+            margin-bottom: 0.8rem;
+            color: #e8f4f8;
+        }
+
+        .description strong {
+            color: #38bdf8;
+        }
+
+        .stats-overlay {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(26, 58, 82, 0.95);
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #e8f4f8;
+            z-index: 5;
+            font-family: monospace;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-overlay div {
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-overlay .value {
+            color: #7dd3fc;
+            font-weight: bold;
+        }
+
+        .instruction {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(14, 165, 233, 0.9);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: white;
+            z-index: 5;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a href="../index.html" class="back-link">← Back to Gallery</a>
+            <h1>027 - Skipping Stones</h1>
+            <div class="info">November 21, 2025</div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="canvas-grid">
+            <div class="canvas-container full-width">
+                <div class="canvas-label">Water Surface - Ripple Interference Fractal</div>
+                <div class="instruction">Click to skip stones!</div>
+                <canvas id="mainCanvas" width="1400" height="600"></canvas>
+                <div class="stats-overlay">
+                    <div>Active Ripples: <span class="value" id="rippleCount">0</span></div>
+                    <div>Stone Skips: <span class="value" id="skipCount">0</span></div>
+                    <div>Wave Complexity: <span class="value" id="complexity">0</span></div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Interference Pattern Detail</div>
+                <canvas id="interferenceCanvas" width="680" height="450"></canvas>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-label">Wave Cross-Section</div>
+                <canvas id="crossSectionCanvas" width="680" height="450"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Wave Propagation Speed</label>
+                    <input type="range" id="speedSlider" min="0.5" max="5" value="2" step="0.1">
+                    <div class="value-display" id="speedValue">2.0</div>
+                </div>
+                <div class="slider-group">
+                    <label>Wave Damping</label>
+                    <input type="range" id="dampingSlider" min="0.9" max="0.999" value="0.98" step="0.001">
+                    <div class="value-display" id="dampingValue">0.980</div>
+                </div>
+                <div class="slider-group">
+                    <label>Ripple Amplitude</label>
+                    <input type="range" id="amplitudeSlider" min="5" max="50" value="20" step="1">
+                    <div class="value-display" id="amplitudeValue">20</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="slider-group">
+                    <label>Skips Per Stone</label>
+                    <input type="range" id="skipsSlider" min="1" max="10" value="5" step="1">
+                    <div class="value-display" id="skipsValue">5</div>
+                </div>
+                <div class="slider-group">
+                    <label>Skip Distance</label>
+                    <input type="range" id="distanceSlider" min="50" max="300" value="120" step="10">
+                    <div class="value-display" id="distanceValue">120</div>
+                </div>
+                <div class="slider-group">
+                    <label>Stone Trajectory Angle</label>
+                    <input type="range" id="angleSlider" min="-45" max="45" value="15" step="5">
+                    <div class="value-display" id="angleValue">15°</div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="autoSkipBtn">Start Auto-Skip</button>
+                <button id="clearBtn">Clear Water</button>
+                <button id="pauseBtn">Pause</button>
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>Fractal Nature of Water Ripples</h2>
+            <p>
+                When a stone skips across water, it creates a <strong>fractal pattern</strong> of interfering waves.
+                Each impact generates concentric circular ripples that expand outward, and when multiple ripples meet,
+                they create <strong>interference patterns</strong> with remarkable mathematical beauty. These patterns
+                are fractal because the interference creates smaller ripples on top of larger ones, exhibiting
+                <strong>self-similarity at different scales</strong>.
+            </p>
+            <p>
+                The physics of water waves follows the <strong>wave equation</strong>, where each point on the water
+                surface oscillates up and down. When waves from different sources meet, they undergo
+                <strong>constructive interference</strong> (waves add together) and <strong>destructive interference</strong>
+                (waves cancel out). This creates complex patterns that look like nested circles, hyperbolas, and
+                other geometric shapes - all emerging from simple circular waves.
+            </p>
+            <p>
+                The fractal dimension of these ripple patterns increases as more stones skip across the surface.
+                A single stone creates simple concentric circles (dimension ≈ 1), but multiple skipping stones create
+                intricate <strong>Moiré patterns</strong> and interference networks that approach a higher fractal dimension.
+                The patterns are self-similar: zooming into any intersection point reveals similar interference structures
+                at smaller scales.
+            </p>
+            <p>
+                Each skip in a stone's trajectory creates a new wave source, and the spacing between skips follows a
+                natural decay pattern as the stone loses energy. This creates a <strong>hierarchical structure</strong>
+                in the wave field: the first skip produces the largest ripples, subsequent skips produce progressively
+                smaller ripples, creating a cascade of scales. Watch how the interference patterns become more complex
+                as additional stones skip across the water, building fractal complexity through simple wave superposition.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        class Ripple {
+            constructor(x, y, amplitude, speed) {
+                this.x = x;
+                this.y = y;
+                this.amplitude = amplitude;
+                this.speed = speed;
+                this.radius = 0;
+                this.age = 0;
+                this.maxAge = 5; // seconds
+            }
+
+            update(dt) {
+                this.radius += this.speed * dt * 60;
+                this.age += dt;
+            }
+
+            getAmplitude(px, py, damping) {
+                const dist = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
+                const diff = Math.abs(dist - this.radius);
+
+                // Wave packet with Gaussian envelope
+                if (diff < 20) {
+                    const wavelength = 30;
+                    const phase = (dist / wavelength) * Math.PI * 2;
+                    const envelope = Math.exp(-diff * diff / 100);
+                    const damping_factor = Math.pow(damping, this.age * 10);
+
+                    return this.amplitude * Math.sin(phase) * envelope * damping_factor;
+                }
+                return 0;
+            }
+
+            isDead() {
+                return this.age > this.maxAge;
+            }
+        }
+
+        class SkippingStones {
+            constructor() {
+                this.mainCanvas = document.getElementById('mainCanvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                this.interferenceCanvas = document.getElementById('interferenceCanvas');
+                this.interferenceCtx = this.interferenceCanvas.getContext('2d');
+                this.crossSectionCanvas = document.getElementById('crossSectionCanvas');
+                this.crossSectionCtx = this.crossSectionCanvas.getContext('2d');
+
+                // Parameters
+                this.waveSpeed = 2;
+                this.damping = 0.98;
+                this.amplitude = 20;
+                this.skipsPerStone = 5;
+                this.skipDistance = 120;
+                this.trajectoryAngle = 15;
+
+                // State
+                this.ripples = [];
+                this.isPaused = false;
+                this.autoSkip = false;
+                this.autoSkipTimer = 0;
+                this.totalSkips = 0;
+                this.lastTime = performance.now();
+
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                this.mainCanvas.addEventListener('click', (e) => {
+                    const rect = this.mainCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.skipStone(x, y);
+                });
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.waveSpeed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = this.waveSpeed.toFixed(1);
+                });
+
+                document.getElementById('dampingSlider').addEventListener('input', (e) => {
+                    this.damping = parseFloat(e.target.value);
+                    document.getElementById('dampingValue').textContent = this.damping.toFixed(3);
+                });
+
+                document.getElementById('amplitudeSlider').addEventListener('input', (e) => {
+                    this.amplitude = parseFloat(e.target.value);
+                    document.getElementById('amplitudeValue').textContent = this.amplitude;
+                });
+
+                document.getElementById('skipsSlider').addEventListener('input', (e) => {
+                    this.skipsPerStone = parseInt(e.target.value);
+                    document.getElementById('skipsValue').textContent = this.skipsPerStone;
+                });
+
+                document.getElementById('distanceSlider').addEventListener('input', (e) => {
+                    this.skipDistance = parseInt(e.target.value);
+                    document.getElementById('distanceValue').textContent = this.skipDistance;
+                });
+
+                document.getElementById('angleSlider').addEventListener('input', (e) => {
+                    this.trajectoryAngle = parseInt(e.target.value);
+                    document.getElementById('angleValue').textContent = this.trajectoryAngle + '°';
+                });
+
+                document.getElementById('autoSkipBtn').addEventListener('click', (e) => {
+                    this.autoSkip = !this.autoSkip;
+                    e.target.textContent = this.autoSkip ? 'Stop Auto-Skip' : 'Start Auto-Skip';
+                });
+
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.ripples = [];
+                    this.totalSkips = 0;
+                });
+
+                document.getElementById('pauseBtn').addEventListener('click', (e) => {
+                    this.isPaused = !this.isPaused;
+                    e.target.textContent = this.isPaused ? 'Resume' : 'Pause';
+                });
+            }
+
+            skipStone(startX, startY) {
+                const angleRad = (this.trajectoryAngle * Math.PI) / 180;
+
+                for (let i = 0; i < this.skipsPerStone; i++) {
+                    // Calculate skip position with decreasing energy
+                    const energyFactor = Math.pow(0.8, i); // Energy decreases with each skip
+                    const skipDist = this.skipDistance * energyFactor;
+                    const skipAmp = this.amplitude * energyFactor;
+
+                    // Add some randomness to simulate natural skipping
+                    const randomAngle = angleRad + (Math.random() - 0.5) * 0.3;
+                    const randomDist = skipDist * (0.9 + Math.random() * 0.2);
+
+                    const x = startX + Math.cos(randomAngle) * randomDist * i;
+                    const y = startY + Math.sin(randomAngle) * randomDist * i;
+
+                    // Only add ripple if within canvas bounds
+                    if (x >= 0 && x <= this.mainCanvas.width && y >= 0 && y <= this.mainCanvas.height) {
+                        this.ripples.push(new Ripple(x, y, skipAmp, this.waveSpeed));
+                        this.totalSkips++;
+                    }
+                }
+            }
+
+            getWaveHeight(x, y) {
+                let totalHeight = 0;
+                for (const ripple of this.ripples) {
+                    totalHeight += ripple.getAmplitude(x, y, this.damping);
+                }
+                return totalHeight;
+            }
+
+            drawMainCanvas() {
+                const ctx = this.mainCtx;
+                const width = this.mainCanvas.width;
+                const height = this.mainCanvas.height;
+
+                // Water background gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, height);
+                gradient.addColorStop(0, '#1e3a5f');
+                gradient.addColorStop(0.5, '#2d5a7b');
+                gradient.addColorStop(1, '#1a2f4a');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw ripples with interference
+                const resolution = 4; // Lower = more detail, higher = better performance
+
+                for (let x = 0; x < width; x += resolution) {
+                    for (let y = 0; y < height; y += resolution) {
+                        const height_val = this.getWaveHeight(x, y);
+
+                        if (Math.abs(height_val) > 0.1) {
+                            // Color based on wave height
+                            const normalized = Math.max(-1, Math.min(1, height_val / this.amplitude));
+
+                            let color;
+                            if (normalized > 0) {
+                                // Crest - lighter blue/white
+                                const intensity = Math.floor(normalized * 255);
+                                color = `rgba(${125 + intensity}, ${211 + (intensity * 0.2)}, ${252}, ${normalized * 0.6})`;
+                            } else {
+                                // Trough - darker blue
+                                const intensity = Math.floor(Math.abs(normalized) * 100);
+                                color = `rgba(${Math.max(0, 26 - intensity)}, ${Math.max(0, 58 - intensity)}, ${Math.max(0, 82 - intensity)}, ${Math.abs(normalized) * 0.4})`;
+                            }
+
+                            ctx.fillStyle = color;
+                            ctx.fillRect(x, y, resolution, resolution);
+                        }
+                    }
+                }
+
+                // Draw ripple circles for visualization
+                ctx.strokeStyle = 'rgba(125, 211, 252, 0.3)';
+                ctx.lineWidth = 1.5;
+
+                for (const ripple of this.ripples) {
+                    const alpha = Math.max(0, 1 - ripple.age / ripple.maxAge);
+                    ctx.strokeStyle = `rgba(125, 211, 252, ${alpha * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Update stats
+                document.getElementById('rippleCount').textContent = this.ripples.length;
+                document.getElementById('skipCount').textContent = this.totalSkips;
+                document.getElementById('complexity').textContent = Math.min(100, this.ripples.length * 10);
+            }
+
+            drawInterferencePattern() {
+                const ctx = this.interferenceCtx;
+                const width = this.interferenceCanvas.width;
+                const height = this.interferenceCanvas.height;
+
+                // Create detailed interference pattern
+                const imageData = ctx.createImageData(width, height);
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const zoom = 2; // Zoom factor for detail
+
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < height; y++) {
+                        // Map to main canvas coordinates (centered and zoomed)
+                        const mainX = this.mainCanvas.width / 2 + (x - centerX) * zoom;
+                        const mainY = this.mainCanvas.height / 2 + (y - centerY) * zoom;
+
+                        const height_val = this.getWaveHeight(mainX, mainY);
+                        const normalized = (height_val / this.amplitude + 1) * 0.5; // Normalize to 0-1
+
+                        const idx = (y * width + x) * 4;
+                        const intensity = Math.floor(normalized * 255);
+
+                        // Blue color scheme matching water
+                        imageData.data[idx] = Math.floor(intensity * 0.5);
+                        imageData.data[idx + 1] = Math.floor(intensity * 0.7);
+                        imageData.data[idx + 2] = intensity;
+                        imageData.data[idx + 3] = 255;
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+            drawCrossSection() {
+                const ctx = this.crossSectionCtx;
+                const width = this.crossSectionCanvas.width;
+                const height = this.crossSectionCanvas.height;
+
+                // Background
+                ctx.fillStyle = '#1e3a5f';
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw grid
+                ctx.strokeStyle = 'rgba(125, 211, 252, 0.1)';
+                ctx.lineWidth = 1;
+
+                for (let y = 0; y < height; y += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+
+                // Draw zero line
+                const zeroY = height / 2;
+                ctx.strokeStyle = 'rgba(125, 211, 252, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, zeroY);
+                ctx.lineTo(width, zeroY);
+                ctx.stroke();
+
+                // Draw wave cross-section along horizontal center of main canvas
+                const mainY = this.mainCanvas.height / 2;
+                const scale = 2; // Vertical scale for better visibility
+
+                ctx.strokeStyle = '#7dd3fc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                for (let x = 0; x < width; x++) {
+                    const mainX = (x / width) * this.mainCanvas.width;
+                    const height_val = this.getWaveHeight(mainX, mainY);
+                    const y = zeroY - height_val * scale;
+
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // Fill under the wave
+                ctx.lineTo(width, zeroY);
+                ctx.lineTo(0, zeroY);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(125, 211, 252, 0.2)';
+                ctx.fill();
+
+                // Draw amplitude markers
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText('+' + this.amplitude, width - 10, zeroY - this.amplitude * scale + 5);
+                ctx.fillText('-' + this.amplitude, width - 10, zeroY + this.amplitude * scale + 5);
+            }
+
+            animate() {
+                const currentTime = performance.now();
+                const dt = Math.min((currentTime - this.lastTime) / 1000, 0.1); // Cap at 100ms
+                this.lastTime = currentTime;
+
+                if (!this.isPaused) {
+                    // Update ripples
+                    for (const ripple of this.ripples) {
+                        ripple.update(dt);
+                    }
+
+                    // Remove dead ripples
+                    this.ripples = this.ripples.filter(r => !r.isDead());
+
+                    // Auto-skip
+                    if (this.autoSkip) {
+                        this.autoSkipTimer += dt;
+                        if (this.autoSkipTimer > 1.5) {
+                            const x = Math.random() * this.mainCanvas.width;
+                            const y = Math.random() * this.mainCanvas.height;
+                            this.skipStone(x, y);
+                            this.autoSkipTimer = 0;
+                        }
+                    }
+                }
+
+                this.drawMainCanvas();
+                this.drawInterferencePattern();
+                this.drawCrossSection();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new SkippingStones();
+        });
+    </script>
+</body>
+</html>
